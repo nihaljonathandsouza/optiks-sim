@@ -22,7 +22,7 @@ This module visualizes wave interference and the physical limits of optical reso
 ## 💻 Technical Stack
 * Built entirely with HTML5, CSS3, and Vanilla JavaScript.
 * Utilizes the HTML5 Canvas API with dynamic High-DPI (Retina display) scaling to ensure mathematically precise, razor-sharp rendering without blurring.
-* Zero external libraries or dependencies—fully functional offline.
+* Zero external libraries or dependencies, fully functional offline.
 * Implements numerical integration algorithms directly in JavaScript to map Bessel functions for 2D circular apertures.
 
 ## 🚀 How to Use
