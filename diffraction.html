@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wave Optics & Diffraction Bench</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-base: #000000; --bg-panel: #0a0a0c; --bg-inset: #111116;
+            --border-main: #00f0ff; --border-dim: #334155;
+            --text-main: #e2e8f0; --text-muted: #94a3b8; --text-data: #00f0ff;
+            --accent-primary: #00f0ff; --accent-warning: #ffcc00;
+        }
+
+        body { font-family: 'Space Grotesk', sans-serif; background: var(--bg-base); color: var(--text-main); padding: 2vw; line-height: 1.6; margin: 0; }
+        h1, h2, h3 { text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin: 0; }
+        .value-display, .math-val { font-family: 'Space Mono', monospace; font-weight: 700; }
+
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; background: var(--bg-panel); padding: 2.5%; border: 1px solid var(--border-dim); box-sizing: border-box; }
+        .header-section { margin-bottom: 20px; border-bottom: 2px solid var(--border-main); padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+
+        .back-link { color: var(--text-muted); text-decoration: none; font-family: 'Space Mono', monospace; font-size: 0.9em; transition: 0.2s; border: 1px solid var(--border-dim); padding: 5px 10px;}
+        .back-link:hover { color: var(--text-main); border-color: var(--text-main); }
+
+        .setup-tracker { background: rgba(0, 240, 255, 0.05); border: 1px dashed var(--border-main); padding: 10px 15px; margin-bottom: 20px; font-family: 'Space Mono', monospace; font-size: 0.85em; color: var(--text-data); text-align: center; letter-spacing: 0.5px; }
+
+        .visual-dashboard { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
+        @media (min-width: 900px) { .visual-dashboard { grid-template-columns: 1.8fr 1fr; } }
+
+        .canvas-box { background: var(--bg-inset); border: 1px solid var(--border-dim); padding: 15px; display: flex; flex-direction: column; }
+        .canvas-label { font-size: 0.8em; color: var(--text-muted); margin-bottom: 8px; font-family: 'Space Mono', monospace; }
+
+        canvas { width: 100%; display: block; background: #000; border: 1px solid #1a202c; box-sizing: border-box; }
+        #graphCanvas { aspect-ratio: 900 / 350; margin-bottom: 5px; flex-grow: 1; }
+        #stripCanvas { aspect-ratio: 900 / 40; }
+        #patternCanvas { aspect-ratio: 1 / 1; width: 100%; max-height: 100%; object-fit: contain; margin: auto; border-radius: 4px; }
+
+        /* Dynamic Newton's Ring Canvas */
+        #newtonCanvas { aspect-ratio: 1 / 1; width: 100%; max-width: 200px; margin: 15px auto 0 auto; border-radius: 50%; box-shadow: 0 0 15px rgba(0,0,0,0.5); border: 1px solid var(--border-dim); }
+
+        .mode-selector { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        .mode-btn { flex: 1; min-width: 120px; background: var(--bg-inset); color: var(--text-muted); border: 1px solid var(--border-dim); padding: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
+        .mode-btn.active { background: rgba(0, 240, 255, 0.1); color: var(--accent-primary); border-color: var(--accent-primary); }
+
+        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .control-group { display: flex; flex-direction: column; background: var(--bg-inset); padding: 15px; border: 1px solid var(--border-dim); }
+        .control-group.disabled { opacity: 0.4; pointer-events: none; }
+
+        .control-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        label { font-weight: 600; font-size: 0.85em; color: var(--text-muted); text-transform: uppercase; margin: 0; }
+        .value-display { font-size: 1.1em; color: var(--text-data); }
+
+        input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; }
+        input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: var(--border-dim); }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 8px; background: var(--accent-primary); margin-top: -6px; border-radius: 0; }
+
+        .toggle-wrapper { display: flex; align-items: center; gap: 8px; font-size: 0.85em; font-weight: 700; color: #fff; cursor: pointer;}
+        input[type="checkbox"] { accent-color: #fff; cursor: pointer; width: 16px; height: 16px;}
+
+        .info-panel { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 900px) { .info-panel { grid-template-columns: 1fr 1.5fr; } }
+
+        .math-side, .explanation-side { background: var(--bg-inset); padding: 20px; border: 1px solid var(--border-dim); }
+        h3 { border-bottom: 1px solid var(--border-dim); padding-bottom: 10px; margin-bottom: 15px; color: var(--text-muted); font-size: 1em; }
+        .math-line { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px dotted var(--border-dim); padding: 12px 0; }
+        .math-line:last-child { border-bottom: none; }
+        .math-label { font-size: 0.9em; color: var(--text-main); }
+
+        .inquiry-box { background: var(--bg-panel); border-left: 3px solid var(--accent-primary); padding: 12px 15px; margin-top: 15px; font-size: 0.9em; }
+        .inquiry-box strong { color: var(--accent-primary); font-family: 'Space Mono', monospace; text-transform: uppercase; font-size: 0.85em; display: block; margin-bottom: 5px; }
+
+        /* Dynamic coloring classes */
+        .dynamic-text { color: var(--accent-primary); transition: color 0.1s; }
+        .dynamic-border { border-left-color: var(--accent-primary); transition: border-color 0.1s; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-section">
+        <h2>Physical Optics: Diffraction</h2>
+        <a href="index.html" class="back-link">&larr; Return to Dashboard</a>
+    </div>
+
+    <div class="setup-tracker">
+        [LIGHT SOURCE: Collimated Plane Waves] &rarr; [APERTURE] &rarr; [PROJECTION SCREEN (1.0 m)]
+    </div>
+
+    <div class="mode-selector">
+        <button class="mode-btn active" data-mode="single">Single Slit</button>
+        <button class="mode-btn" data-mode="double">Double Slit</button>
+        <button class="mode-btn" data-mode="circular">Circular (Pupil)</button>
+    </div>
+
+    <div class="visual-dashboard">
+        <div class="canvas-box">
+            <div class="canvas-label">> 1D INTENSITY PROFILE</div>
+            <canvas id="graphCanvas"></canvas>
+            <canvas id="stripCanvas"></canvas>
+        </div>
+        <div class="canvas-box">
+            <div class="canvas-label">> 2D FRONT PROJECTION</div>
+            <canvas id="patternCanvas"></canvas>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="control-group" id="waveControlBox">
+            <div class="control-header">
+                <label>Source (&lambda;)</label>
+                <label class="toggle-wrapper" title="Simulate a broad-spectrum light source">
+                    <input type="checkbox" id="whiteLightToggle"> White Light
+                </label>
+            </div>
+            <input type="range" id="wavelength" min="400" max="700" step="1" value="550" title="Slide to adjust wavelength in nanometers">
+            <div style="text-align: right; margin-top: 5px;"><span id="waveVal" class="value-display">550 nm</span></div>
+        </div>
+        <div class="control-group">
+            <div class="control-header"><label>Aperture Size (a)</label></div>
+            <input type="range" id="slitWidth" min="2" max="60" step="1" value="20" title="Slide to adjust the physical size of the opening">
+            <div style="text-align: right; margin-top: 5px;"><span id="slitWidthVal" class="value-display">20 &mu;m</span></div>
+        </div>
+        <div class="control-group disabled" id="sepControl">
+            <div class="control-header"><label>Slit Separation (d)</label></div>
+            <input type="range" id="slitSep" min="40" max="250" step="1" value="100" title="Slide to adjust distance between two slits">
+            <div style="text-align: right; margin-top: 5px;"><span id="slitSepVal" class="value-display">100 &mu;m</span></div>
+        </div>
+    </div>
+
+    <div class="info-panel">
+        <div class="math-side">
+            <h3>System Parameters</h3>
+            <div class="math-line">
+                <div class="math-label">Screen Distance (L)</div>
+                <span class="math-val">1.00 m</span>
+            </div>
+            <div class="math-line">
+                <div class="math-label">
+                    Central Max Width (W)<br>
+                    <small id="math-formula-width" style="color: var(--text-muted); font-family: 'Space Mono', monospace;"><em>W = 2&lambda;L / a</em></small>
+                </div>
+                <span id="math-width" class="math-val">0.00 mm</span>
+            </div>
+            <div class="math-line" id="rayleigh-container" style="display:none; border-top: 1px solid var(--border-dim); padding-top: 15px; margin-top: 10px;">
+                <div class="math-label dynamic-text" style="font-weight: 700;">
+                    Rayleigh Resolution (&theta;)<br>
+                    <small style="font-family: 'Space Mono', monospace;"><em>&theta; = 1.22&lambda; / a</em></small>
+                </div>
+                <span id="math-rayleigh" class="math-val dynamic-text">0.00 mrad</span>
+            </div>
+
+            <!-- Dynamic Newton's Rings Reference -->
+            <div id="newtons-image-box" style="display:none; margin-top: 25px; text-align: center;">
+                <div style="font-family: 'Space Mono', monospace; font-size: 0.8em; color: var(--text-muted); margin-bottom: 8px;">> LIVE SIMULATION: NEWTON'S RINGS</div>
+                <canvas id="newtonCanvas"></canvas>
+
+                <!-- Real Experimental Photos Links -->
+                <div style="margin-top: 20px;">
+                    <div style="font-family: 'Space Mono', monospace; font-size: 0.75em; color: var(--text-muted); margin-bottom: 10px;">> VIEW ACTUAL LAB CAPTURES:</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
+                        <a href="sodium1.jpg" target="_blank" class="back-link" style="font-size: 0.75em;">Sodium (Mono) 1</a>
+                        <a href="sodium2.jpg" target="_blank" class="back-link" style="font-size: 0.75em;">Sodium (Mono) 2</a>
+                        <a href="mercury1.jpg" target="_blank" class="back-link" style="font-size: 0.75em;">Mercury (White) 1</a>
+                        <a href="mercury2.jpg" target="_blank" class="back-link" style="font-size: 0.75em;">Mercury (White) 2</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="explanation-side">
+            <h3>Visual Theory & Clinical Context</h3>
+
+            <div class="inquiry-box dynamic-border" id="newton-box" style="display:none;">
+                <strong class="dynamic-text">> AIRY'S DISK VS. NEWTON'S RINGS</strong>
+                The circular aperture projection looks almost identical to Newton's Rings, but the physics are completely different:<br><br>
+                &bull; <strong>Airy's Disk (Diffraction):</strong> Created by a flat wave of light squeezing through a hole. The central spot contains ~84% of the light, and the outer rings <em>fade exponentially</em> into darkness.<br>
+                &bull; <strong>Newton's Rings (Thin-Film Interference):</strong> Created by light reflecting off a microscopic air gap between a curved lens and flat glass. The outer rings do not fade exponentially; they maintain brightness but squeeze closer together.
+            </div>
+
+            <div class="inquiry-box dynamic-border">
+                <strong class="dynamic-text">> EXE: White Light Dispersion</strong>
+                Toggle <strong>White Light</strong> mode. Notice how the central maximum remains pure white, but the outer fringes become spectral rainbows? This happens because violet light (&lambda; &approx; 400 nm) reaches its destructive interference minimum at a smaller angle than red light (&lambda; &approx; 700 nm).
+            </div>
+
+            <div class="inquiry-box dynamic-border">
+                <strong class="dynamic-text">> EXE: The Aberration Trade-off</strong>
+                Switch to <strong>Circular (Pupil)</strong>. The human pupil ranges from 2 mm to 8 mm. A tiny pupil causes massive diffraction blur (Airy Disks). But a massive pupil exposes the outer edges of the cornea, causing <em>Spherical Aberrations</em>. The eye reaches peak resolution at a pupil diameter of ~3.0 mm, perfectly balancing both physical constraints.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const gCanvas = document.getElementById('graphCanvas'); const gCtx = gCanvas.getContext('2d');
+    const sCanvas = document.getElementById('stripCanvas'); const sCtx = sCanvas.getContext('2d');
+    const pCanvas = document.getElementById('patternCanvas'); const pCtx = pCanvas.getContext('2d');
+    const nCanvas = document.getElementById('newtonCanvas'); const nCtx = nCanvas.getContext('2d');
+
+    const G_WIDTH = 900; const G_HEIGHT = 350;
+    const S_HEIGHT = 40;
+    const P_SIZE = 300;
+    const N_SIZE = 200; // Size of Newton's Ring canvas
+
+    let currentMode = 'single';
+
+    function initHighDPICanvases() {
+        const dpr = window.devicePixelRatio || 1;
+        gCanvas.width = G_WIDTH * dpr; gCanvas.height = G_HEIGHT * dpr;
+        sCanvas.width = G_WIDTH * dpr; sCanvas.height = S_HEIGHT * dpr;
+        pCanvas.width = P_SIZE * dpr; pCanvas.height = P_SIZE * dpr;
+        nCanvas.width = N_SIZE * dpr; nCanvas.height = N_SIZE * dpr;
+
+        gCtx.scale(dpr, dpr);
+    }
+
+    initHighDPICanvases();
+    window.addEventListener('resize', () => { initHighDPICanvases(); draw(); });
+
+    const inputs = { wave: document.getElementById('wavelength'), width: document.getElementById('slitWidth'), sep: document.getElementById('slitSep'), white: document.getElementById('whiteLightToggle') };
+    const displays = { wave: document.getElementById('waveVal'), width: document.getElementById('slitWidthVal'), sep: document.getElementById('slitSepVal'), centralWidth: document.getElementById('math-width'), rayleigh: document.getElementById('math-rayleigh'), formulaWidth: document.getElementById('math-formula-width') };
+    const sepControl = document.getElementById('sepControl');
+    const newtonBox = document.getElementById('newton-box');
+    const newtonImage = document.getElementById('newtons-image-box');
+    const modeBtns = document.querySelectorAll('.mode-btn');
+
+    function getRGBArray(Wavelength) {
+        let R, G, B;
+        if(Wavelength >= 380 && Wavelength < 440) { R = -(Wavelength - 440) / (440 - 380); G = 0.0; B = 1.0; }
+        else if(Wavelength >= 440 && Wavelength < 490) { R = 0.0; G = (Wavelength - 440) / (490 - 440); B = 1.0; }
+        else if(Wavelength >= 490 && Wavelength < 510) { R = 0.0; G = 1.0; B = -(Wavelength - 510) / (510 - 490); }
+        else if(Wavelength >= 510 && Wavelength < 580) { R = (Wavelength - 510) / (580 - 510); G = 1.0; B = 0.0; }
+        else if(Wavelength >= 580 && Wavelength < 645) { R = 1.0; G = -(Wavelength - 645) / (645 - 580); B = 0.0; }
+        else if(Wavelength >= 645 && Wavelength <= 780) { R = 1.0; G = 0.0; B = 0.0; }
+        else { R = 0; G = 0; B = 0; }
+        return [R * 255, G * 255, B * 255];
+    }
+
+    function j1(x) {
+        if (x === 0) return 0;
+        const steps = 30; let sum = 0;
+        for (let i = 0; i < steps; i++) {
+            let theta = (i + 0.5) * (Math.PI / steps);
+            sum += Math.cos(theta - x * Math.sin(theta));
+        }
+        return sum / steps;
+    }
+
+    function sinc(x) { return (x === 0) ? 1 : Math.sin(x) / x; }
+
+    function getIntensity(sinTheta, lambda, a, d) {
+        if (currentMode === 'single') {
+            let beta = (Math.PI * a * sinTheta) / lambda;
+            return Math.pow(sinc(beta), 2);
+        } else if (currentMode === 'double') {
+            let beta = (Math.PI * a * sinTheta) / lambda;
+            let alpha = (Math.PI * d * sinTheta) / lambda;
+            return Math.pow(Math.cos(alpha), 2) * Math.pow(sinc(beta), 2);
+        } else if (currentMode === 'circular') {
+            let x_val = (Math.PI * a * sinTheta) / lambda;
+            if (x_val === 0) return 1;
+            return Math.pow((2 * j1(x_val)) / x_val, 2);
+        }
+        return 0;
+    }
+
+    modeBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            modeBtns.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            currentMode = e.target.dataset.mode;
+
+            sepControl.classList.toggle('disabled', currentMode !== 'double');
+            document.getElementById('rayleigh-container').style.display = (currentMode === 'circular') ? 'flex' : 'none';
+            newtonBox.style.display = (currentMode === 'circular') ? 'block' : 'none';
+            newtonImage.style.display = (currentMode === 'circular') ? 'block' : 'none';
+            displays.formulaWidth.innerHTML = (currentMode === 'circular') ? '<em>W = 2.44&lambda;L / a</em>' : '<em>W = 2&lambda;L / a</em>';
+
+            draw();
+        });
+    });
+
+    function draw() {
+        const isWhite = inputs.white.checked;
+        inputs.wave.style.opacity = isWhite ? '0.3' : '1';
+        inputs.wave.style.pointerEvents = isWhite ? 'none' : 'auto';
+
+        const lambda_nm = isWhite ? 550 : parseFloat(inputs.wave.value);
+        const a_um = parseFloat(inputs.width.value);
+        const d_um = parseFloat(inputs.sep.value);
+
+        displays.wave.textContent = isWhite ? "BROAD SPECTRUM" : `${lambda_nm} nm`;
+        displays.width.textContent = `${a_um} \u03BCm`;
+        displays.sep.textContent = `${d_um} \u03BCm`;
+
+        const uiColor = isWhite ? "#ffffff" : `rgb(${getRGBArray(lambda_nm).join(',')})`;
+        document.documentElement.style.setProperty('--text-data', uiColor);
+        document.documentElement.style.setProperty('--accent-primary', uiColor);
+
+        const a = a_um * 1e-6; const d = d_um * 1e-6; const L = 1.0; const maxTheta = 0.08;
+        const dpr = window.devicePixelRatio || 1;
+
+        // Parameter Readouts
+        let ref_lambda = lambda_nm * 1e-9;
+        let maxWidth_mm = (currentMode === 'circular') ? (2 * 1.22 * ref_lambda * L / a) * 1000 : (2 * ref_lambda * L / a) * 1000;
+        displays.centralWidth.textContent = isWhite ? `~ ${maxWidth_mm.toFixed(1)} mm` : `${maxWidth_mm.toFixed(1)} mm`;
+        if (currentMode === 'circular') displays.rayleigh.textContent = `${((1.22 * ref_lambda / a) * 1000).toFixed(2)} mrad`;
+
+        gCtx.clearRect(0,0,G_WIDTH,G_HEIGHT);
+        const physSW = sCanvas.width; const physSH = sCanvas.height;
+        const physPW = pCanvas.width; const physPH = pCanvas.height;
+
+        const activeWavelengths = isWhite ? [400, 450, 500, 550, 600, 650, 700] : [lambda_nm];
+        const weight = isWhite ? (1 / activeWavelengths.length) * 2.5 : 1;
+
+        // 1. DRAW GRAPH
+        gCtx.beginPath(); gCtx.moveTo(0, G_HEIGHT);
+        for (let x = 0; x < G_WIDTH; x++) {
+            let theta = ((x - G_WIDTH/2) / (G_WIDTH/2)) * maxTheta;
+            let sinTheta = Math.sin(theta);
+            let r=0, g=0, b=0;
+            for(let w of activeWavelengths) {
+                let I = getIntensity(sinTheta, w * 1e-9, a, d);
+                let rgb = getRGBArray(w);
+                r += I * rgb[0] * weight; g += I * rgb[1] * weight; b += I * rgb[2] * weight;
+            }
+            let maxI = Math.max(r, g, b) / 255;
+            let y = G_HEIGHT - (Math.min(maxI, 1) * (G_HEIGHT - 10));
+            gCtx.lineTo(x, y);
+        }
+        gCtx.lineWidth = 2; gCtx.strokeStyle = uiColor; gCtx.stroke();
+        gCtx.lineTo(G_WIDTH, G_HEIGHT); gCtx.lineTo(0, G_HEIGHT);
+        gCtx.fillStyle = isWhite ? 'rgba(255,255,255,0.15)' : uiColor.replace('rgb', 'rgba').replace(')', ', 0.25)');
+        gCtx.fill();
+
+        // 2. DRAW 1D STRIP
+        const id1D = sCtx.createImageData(physSW, physSH);
+        const stripCache = new Uint8ClampedArray(physSW * 4);
+        const gamma1D = 0.6;
+
+        for (let x = 0; x < physSW; x++) {
+            let theta = ((x - physSW/2) / (physSW/2)) * maxTheta;
+            let sinTheta = Math.sin(theta);
+            let r=0, g=0, b=0;
+            for(let w of activeWavelengths) {
+                let I = getIntensity(sinTheta, w * 1e-9, a, d);
+                let rgb = getRGBArray(w);
+                r += I * rgb[0] * weight; g += I * rgb[1] * weight; b += I * rgb[2] * weight;
+            }
+            let idx = x * 4;
+            stripCache[idx]   = Math.min(255, Math.pow(r/255, gamma1D)*255);
+            stripCache[idx+1] = Math.min(255, Math.pow(g/255, gamma1D)*255);
+            stripCache[idx+2] = Math.min(255, Math.pow(b/255, gamma1D)*255);
+            stripCache[idx+3] = 255;
+        }
+
+        for(let y = 0; y < physSH; y++) {
+            id1D.data.set(stripCache, y * physSW * 4);
+        }
+        sCtx.putImageData(id1D, 0, 0);
+
+        // 3. DRAW 2D PATTERN
+        const id2D = pCtx.createImageData(physPW, physPH);
+        const pcx = physPW / 2; const pcy = physPH / 2;
+        const gamma2D = currentMode === 'circular' ? 0.35 : 0.6;
+
+        if (currentMode === 'single' || currentMode === 'double') {
+            const rowCache = new Uint8ClampedArray(physPW * 4);
+            for(let x=0; x < physPW; x++) {
+                let theta = ((x - pcx) / pcx) * maxTheta;
+                let sinTheta = Math.sin(theta);
+                let r=0, g=0, b=0;
+                for(let w of activeWavelengths) {
+                    let I = getIntensity(sinTheta, w * 1e-9, a, d);
+                    let rgb = getRGBArray(w);
+                    r += I * rgb[0] * weight; g += I * rgb[1] * weight; b += I * rgb[2] * weight;
+                }
+                let idx = x * 4;
+                rowCache[idx]   = Math.min(255, Math.pow(r/255, gamma2D)*255);
+                rowCache[idx+1] = Math.min(255, Math.pow(g/255, gamma2D)*255);
+                rowCache[idx+2] = Math.min(255, Math.pow(b/255, gamma2D)*255);
+                rowCache[idx+3] = 255;
+            }
+            for(let y=0; y < physPH; y++) id2D.data.set(rowCache, y * physPW * 4);
+
+        } else if (currentMode === 'circular') {
+            const maxR = Math.ceil(Math.hypot(pcx, pcy));
+            const radCache = new Uint8ClampedArray((maxR + 1) * 4);
+
+            for(let rad=0; rad <= maxR; rad++) {
+                let theta = (rad / pcx) * maxTheta;
+                let sinTheta = Math.sin(theta);
+                let r=0, g=0, b=0;
+                for(let w of activeWavelengths) {
+                    let I = getIntensity(sinTheta, w * 1e-9, a, d);
+                    let rgb = getRGBArray(w);
+                    r += I * rgb[0] * weight; g += I * rgb[1] * weight; b += I * rgb[2] * weight;
+                }
+                let idx = rad * 4;
+                radCache[idx]   = Math.min(255, Math.pow(r/255, gamma2D)*255);
+                radCache[idx+1] = Math.min(255, Math.pow(g/255, gamma2D)*255);
+                radCache[idx+2] = Math.min(255, Math.pow(b/255, gamma2D)*255);
+                radCache[idx+3] = 255;
+            }
+
+            for(let y=0; y < physPH; y++) {
+                let dy = y - pcy;
+                for(let x=0; x < physPW; x++) {
+                    let dx = x - pcx;
+                    let rad = Math.round(Math.hypot(dx, dy));
+                    if (rad <= maxR) {
+                        let cIdx = rad * 4;
+                        let idx = (y * physPW + x) * 4;
+                        id2D.data[idx]   = radCache[cIdx];
+                        id2D.data[idx+1] = radCache[cIdx+1];
+                        id2D.data[idx+2] = radCache[cIdx+2];
+                        id2D.data[idx+3] = 255;
+                    }
+                }
+            }
+
+            // 4. DRAW NEWTON'S RINGS (Only in Circular Mode)
+            const physNW = nCanvas.width; const physNH = nCanvas.height;
+            const idN = nCtx.createImageData(physNW, physNH);
+            const ncx = physNW / 2; const ncy = physNH / 2;
+            const maxNR = Math.ceil(Math.hypot(ncx, ncy));
+            const nRadCache = new Uint8ClampedArray((maxNR + 1) * 4);
+
+            for(let rad=0; rad <= maxNR; rad++) {
+                let r_n=0, g_n=0, b_n=0;
+                // Correctly scale rad down by dpr so rings don't become 4x tighter on Retina screens
+                let scaled_rad = rad / dpr;
+
+                for(let w of activeWavelengths) {
+                    // Newton's Rings formula: I = sin^2( k * r^2 / lambda )
+                    let phase = (0.005 * scaled_rad * scaled_rad * a_um) / w;
+                    let I = Math.pow(Math.sin(phase), 2);
+                    let rgb = getRGBArray(w);
+                    // No gamma correction here to emphasize non-exponential fade
+                    r_n += I * rgb[0] * weight; g_n += I * rgb[1] * weight; b_n += I * rgb[2] * weight;
+                }
+                let idx = rad * 4;
+                nRadCache[idx]   = Math.min(255, r_n);
+                nRadCache[idx+1] = Math.min(255, g_n);
+                nRadCache[idx+2] = Math.min(255, b_n);
+                nRadCache[idx+3] = 255;
+            }
+
+            for(let y=0; y < physNH; y++) {
+                let dy = y - ncy;
+                for(let x=0; x < physNW; x++) {
+                    let dx = x - ncx;
+                    let rad = Math.round(Math.hypot(dx, dy));
+                    if (rad <= maxNR) {
+                        let cIdx = rad * 4;
+                        let idx = (y * physNW + x) * 4;
+                        idN.data[idx]   = nRadCache[cIdx];
+                        idN.data[idx+1] = nRadCache[cIdx+1];
+                        idN.data[idx+2] = nRadCache[cIdx+2];
+                        idN.data[idx+3] = 255;
+                    }
+                }
+            }
+            nCtx.putImageData(idN, 0, 0);
+        }
+        pCtx.putImageData(id2D, 0, 0);
+    }
+
+    Object.values(inputs).forEach(input => input.addEventListener('input', draw));
+    draw();
+</script>
+</body>
+</html>
