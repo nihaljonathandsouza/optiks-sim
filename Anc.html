@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acoustics: WaveLab & ANC</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-base: #000000; --bg-panel: #0a0a0c; --bg-inset: #111116;
+            --border-main: #00f0ff; --border-dim: #334155;
+            --text-main: #e2e8f0; --text-muted: #94a3b8; --text-data: #00f0ff;
+            --accent-primary: #00f0ff; --accent-warning: #ffcc00; --accent-danger: #ef4444;
+            --stage1: #00f0ff; --stage2: #a855f7; --stage3: #10b981;
+        }
+
+        body { font-family: 'Space Grotesk', sans-serif; background: var(--bg-base); color: var(--text-main); padding: 2vw; line-height: 1.6; margin: 0; }
+        h1, h2, h3 { text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin: 0; }
+        .value-display, .math-val { font-family: 'Space Mono', monospace; font-weight: 700; }
+
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; background: var(--bg-panel); padding: 2.5%; border: 1px solid var(--border-dim); box-sizing: border-box; }
+        .header-section { margin-bottom: 20px; border-bottom: 2px solid var(--border-main); padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+
+        .back-link { color: var(--text-muted); text-decoration: none; font-family: 'Space Mono', monospace; font-size: 0.9em; transition: 0.2s; border: 1px solid var(--border-dim); padding: 5px 10px; white-space: nowrap;}
+        .back-link:hover { color: var(--text-main); border-color: var(--text-main); }
+
+        /* Tabs System */
+        .tabs { display: flex; border-bottom: 1px solid var(--border-dim); margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { background: transparent; color: var(--text-muted); border: none; padding: 12px 20px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; flex-grow: 1; text-align: center; }
+        .tab-btn:hover { color: var(--text-main); }
+        .tab-btn.active { color: var(--accent-primary); border-bottom-color: var(--accent-primary); background: rgba(0, 240, 255, 0.05); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .canvas-box { background: var(--bg-inset); border: 1px solid var(--border-dim); padding: 15px; display: flex; flex-direction: column; margin-bottom: 20px; }
+        .canvas-label { font-size: 0.8em; color: var(--text-muted); margin-bottom: 12px; font-family: 'Space Mono', monospace; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;}
+        canvas { width: 100%; display: block; background: #000; border: 1px solid #1a202c; box-sizing: border-box; aspect-ratio: 1000 / 400; }
+
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        button.action-btn { background: var(--accent-primary); color: #000; border: none; padding: 12px 20px; font-family: 'Space Mono', monospace; font-weight: 700; cursor: pointer; border-radius: 2px; transition: 0.2s; width: 100%; }
+        button.action-btn:hover { opacity: 0.8; }
+        button.action-btn.secondary { background: var(--border-dim); color: var(--text-main); }
+        button.action-btn.danger { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-danger); color: var(--accent-danger); }
+        button.action-btn.danger.active { background: var(--accent-danger); color: #000; }
+        button.action-btn.mic-btn { background: rgba(16, 185, 129, 0.1); border: 1px solid var(--stage3); color: var(--stage3); }
+
+        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .control-group { display: flex; flex-direction: column; background: var(--bg-inset); padding: 15px; border: 1px solid var(--border-dim); border-top-width: 3px; }
+        .control-group:nth-child(1) { border-top-color: var(--stage1); }
+        .control-group:nth-child(2) { border-top-color: var(--stage2); }
+
+        .control-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        label { font-weight: 600; font-size: 0.85em; color: var(--text-muted); text-transform: uppercase; margin: 0; }
+
+        select { background: #000; color: var(--text-main); border: 1px solid var(--border-dim); padding: 8px; font-family: 'Space Mono', monospace; margin-bottom: 15px; width: 100%; outline: none; cursor: pointer; }
+
+        /* High-Visibility Sliders */
+        input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; margin: 8px 0; }
+        input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 18px; width: 10px; background: #fff; margin-top: -6px; border-radius: 2px; box-shadow: 0 0 5px rgba(0,0,0,0.8); }
+        input[type="range"]:focus { outline: none; }
+        input[type="range"]:focus::-webkit-slider-runnable-track { background: rgba(255, 255, 255, 0.35); }
+        /* Firefox Support */
+        input[type="range"]::-moz-range-track { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
+        input[type="range"]::-moz-range-thumb { height: 18px; width: 10px; background: #fff; border: none; border-radius: 2px; box-shadow: 0 0 5px rgba(0,0,0,0.8); cursor: pointer; }
+
+        /* Unified Direct Input Styling */
+        .input-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .input-label { font-size: 0.8em; color: var(--text-muted); font-family: 'Space Mono', monospace; }
+        .num-wrapper { display: flex; align-items: center; gap: 6px; }
+        .num-input { background: #000; border: 1px solid var(--border-dim); border-radius: 3px; padding: 4px 6px; font-family: 'Space Mono', monospace; font-size: 1em; text-align: center; outline: none; font-weight: bold; width: 75px; transition: border-color 0.2s;}
+        .num-input:focus { border-color: var(--accent-primary); }
+        .num-unit { color: var(--text-muted); font-family: 'Space Mono', monospace; font-size: 0.9em; width: 25px; }
+
+        .file-upload-wrapper { position: relative; overflow: hidden; display: inline-block; cursor: pointer; }
+        .file-upload-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
+        .file-upload-btn { background: var(--bg-panel); border: 1px dashed var(--border-main); color: var(--text-main); padding: 12px 15px; font-family: 'Space Mono', monospace; text-align: center; display: block; width: 100%; box-sizing: border-box; transition: 0.2s;}
+        .file-upload-btn:hover { background: rgba(0, 240, 255, 0.05); }
+
+        .toggle-wrapper { display: flex; align-items: center; gap: 8px; font-size: 0.85em; font-weight: 700; color: #fff; cursor: pointer; margin-top: 10px; margin-bottom: 15px;}
+        input[type="checkbox"] { accent-color: var(--accent-danger); cursor: pointer; width: 16px; height: 16px;}
+
+        .info-panel { display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 20px; }
+        @media (min-width: 900px) { .info-panel { grid-template-columns: 1fr 1.3fr; } }
+
+        .math-side, .explanation-side { background: var(--bg-inset); padding: 20px; border: 1px solid var(--border-dim); }
+        h3 { border-bottom: 1px solid var(--border-dim); padding-bottom: 10px; margin-bottom: 15px; color: var(--text-muted); font-size: 1em; }
+
+        .theory-block { margin-bottom: 20px; background: var(--bg-panel); border-left: 3px solid var(--border-dim); padding: 12px 15px; }
+        .theory-block:last-child { margin-bottom: 0; }
+        .theory-block strong { color: var(--text-main); font-family: 'Space Mono', monospace; text-transform: uppercase; font-size: 0.9em; display: block; margin-bottom: 5px; }
+        .theory-block p { margin: 8px 0 0 0; color: var(--text-muted); font-size: 0.9em; line-height: 1.5; }
+
+        .anc-diagram { display: flex; flex-direction: column; align-items: center; font-family: 'Space Mono', monospace; font-size: 0.8em; color: var(--text-muted); margin: 15px 0; padding: 15px; background: #000; border: 1px solid var(--border-dim); }
+        .anc-box { border: 1px solid var(--border-dim); padding: 8px 15px; margin: 5px 0; text-align: center; }
+        .anc-arrow { margin: 2px 0; color: var(--accent-primary); }
+
+        .warning-box { background: rgba(239, 68, 68, 0.15); border-left: 4px solid var(--accent-danger); padding: 12px; margin-bottom: 15px; font-size: 0.85em; color: var(--text-main); line-height: 1.4; }
+
+        .active-anim { box-shadow: 0 0 15px var(--accent-primary); background: var(--accent-primary) !important; color: #000 !important; }
+
+        /* Artist Block */
+        .artist-block { background: rgba(0, 240, 255, 0.05); border: 1px solid var(--border-main); padding: 15px; margin-bottom: 15px; border-radius: 4px; }
+        .artist-block a { color: var(--stage1); text-decoration: none; transition: 0.2s; }
+        .artist-block a:hover { color: #fff; text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-section">
+        <h2>Acoustics: WaveLab & ANC Bench</h2>
+        <a href="index.html" class="back-link">&larr; Return to Dashboard</a>
+    </div>
+
+    <!-- CANVAS IS UNIVERSAL -->
+    <div class="canvas-box">
+        <div class="canvas-label">
+            <span id="canvasTitle">> THEORETICAL SUPERPOSITION (SINE WAVES)</span>
+            <span style="color: var(--stage3);" id="interferenceState">Constructive Interference</span>
+        </div>
+        <canvas id="waveCanvas"></canvas>
+    </div>
+
+    <!-- TAB NAVIGATION -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('theory')">1. Theoretical Mechanics (Tones)</button>
+        <button class="tab-btn" onclick="switchTab('music')">2. Practical ANC (Audio File)</button>
+        <button class="tab-btn" onclick="switchTab('mic')">3. Live Microphone ANC</button>
+    </div>
+
+    <!-- TAB 1: THEORY (TONES) -->
+    <div id="theoryTab" class="tab-content active">
+        <div class="controls">
+            <!-- TONE CONTROLS -->
+            <div class="control-group">
+                <div class="control-header"><label style="color: var(--stage1)">Source Wave</label></div>
+
+                <div class="control-header" style="margin-top: 5px;"><label>Waveform Type</label></div>
+                <select id="waveType">
+                    <option value="sine">Sine (Pure Tone)</option>
+                    <option value="triangle">Triangle (Warm/Hollow)</option>
+                    <option value="square">Square (8-Bit/Reedy)</option>
+                    <option value="sawtooth">Sawtooth (Bright/Buzzy)</option>
+                </select>
+
+                <div class="control-header"><label>Base Frequency</label></div>
+                <input type="range" id="baseFreq" min="20" max="20000" step="1" value="440">
+                <div class="input-row">
+                    <span class="input-label">Set Freq:</span>
+                    <div class="num-wrapper">
+                        <input type="number" id="numFreq" min="20" max="20000" step="1" value="440" class="num-input" style="color: var(--stage1);">
+                        <span class="num-unit">Hz</span>
+                    </div>
+                </div>
+
+                <div class="control-header" style="margin-top: 15px;"><label>Amplitude Base</label></div>
+                <input type="range" id="vol1" min="0" max="1" step="0.01" value="0.5">
+                <div class="input-row">
+                    <span class="input-label">Set Amp:</span>
+                    <div class="num-wrapper">
+                        <input type="number" id="numVol1" min="0" max="1" step="0.01" value="0.5" class="num-input" style="color: var(--stage1);">
+                        <span class="num-unit"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ANTI-WAVE CONTROLS -->
+            <div class="control-group">
+                <div class="control-header"><label style="color: var(--stage2)">Anti-Wave Generator</label></div>
+
+                <div class="control-header" style="margin-top: 5px;"><label>Freq Offset (&Delta;f)</label></div>
+                <input type="range" id="freqOffset" min="-100" max="100" step="0.1" value="0">
+                <div class="input-row">
+                    <span class="input-label">Set Offset:</span>
+                    <div class="num-wrapper">
+                        <input type="number" id="numFreqOff" min="-100" max="100" step="0.1" value="0" class="num-input" style="color: var(--stage2);">
+                        <span class="num-unit">Hz</span>
+                    </div>
+                </div>
+
+                <div class="control-header" style="margin-top: 15px;"><label>Phase Difference (&phi;)</label></div>
+                <input type="range" id="phaseShift" min="0" max="360" step="1" value="0">
+                <div class="input-row">
+                    <span class="input-label">Set Phase:</span>
+                    <div class="num-wrapper">
+                        <input type="number" id="numPhase" min="0" max="360" step="1" value="0" class="num-input" style="color: var(--stage2);">
+                        <span class="num-unit">&deg;</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="control-group" style="justify-content: center; align-items: center; border-top-color: var(--border-main);">
+                <div class="warning-box" style="width: 100%; box-sizing: border-box;">
+                    <strong style="color: var(--accent-danger); font-family: 'Space Mono', monospace;">⚠️ VOLUME WARNING:</strong>
+                    Remove headphones before sweeping frequencies above 10 kHz to prevent hearing damage.
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 10px;">
+                    <button id="playToneBtn" class="action-btn" style="grid-column: 1 / -1;">▶ PLAY TONES</button>
+                    <button id="autoBeatsBtn" class="action-btn secondary">AUTO BEATS</button>
+                    <button id="djBeatsBtn" class="action-btn secondary" style="border-color: #a855f7; color: #a855f7;">🎧 DJ WOBBLE</button>
+                </div>
+
+                <div style="font-size: 0.75em; color: var(--text-muted); text-align: center;">
+                    <em>Drag Phase to 180&deg; for cancellation. Click <strong>DJ WOBBLE</strong> to simulate an electronic LFO sub-bass using wave beating.</em>
+                </div>
+            </div>
+        </div>
+
+        <!-- THEORY EXPLANATION -->
+        <div class="info-panel">
+            <div class="math-side">
+                <h3>Principle of Superposition</h3>
+                <div class="math-val" style="text-align: center; margin: 15px 0; font-size: 1.1em; color: var(--text-main);">
+                    y(t) = y<sub>1</sub>(t) + y<sub>2</sub>(t)
+                </div>
+                <p style="font-size: 0.9em; color: var(--text-muted);">For two identical waves with a phase difference &phi;:</p>
+                <div style="font-family: 'Space Mono', monospace; font-size: 0.85em; color: var(--stage1); margin-bottom: 5px;">y<sub>1</sub> = A&middot;sin(&omega;t)</div>
+                <div style="font-family: 'Space Mono', monospace; font-size: 0.85em; color: var(--stage2); margin-bottom: 15px;">y<sub>2</sub> = A&middot;sin(&omega;t + &phi;)</div>
+
+                <div style="border-top: 1px dashed var(--border-dim); padding-top: 15px;">
+                    <p style="font-size: 0.9em; color: var(--text-main); margin-top: 0;"><strong>At &phi; = 180&deg; (&pi; radians):</strong></p>
+                    <div style="font-family: 'Space Mono', monospace; font-size: 0.85em; color: var(--stage3); text-align: center;">
+                        A&middot;sin(&omega;t) + A&middot;sin(&omega;t + &pi;) = 0
+                    </div>
+                </div>
+            </div>
+
+            <div class="explanation-side">
+                <h3>Timbre & Harmonics (Fourier Theory)</h3>
+                <div class="theory-block" style="border-color: var(--stage1);">
+                    <strong style="color: var(--stage1);">> Why do shapes sound different?</strong>
+                    <p>French mathematician Joseph Fourier proved that <em>every</em> complex wave is just a sum of pure sine waves. Changing the waveform shape changes the <em>Harmonics</em> (overtones) layered on top of the base frequency:</p>
+                    <ul style="margin-bottom: 0;">
+                        <li><strong>Sine:</strong> Only the fundamental frequency. Clean and smooth.</li>
+                        <li><strong>Triangle:</strong> Odd harmonics that drop rapidly. Warm.</li>
+                        <li><strong>Square:</strong> Odd harmonics dropping slowly. Reedy "8-bit" sound.</li>
+                        <li><strong>Sawtooth:</strong> ALL harmonics. Extremely bright and buzzy.</li>
+                    </ul>
+                </div>
+                <div class="theory-block" style="border-color: #a855f7;">
+                    <strong style="color: #a855f7;">> The DJ Bass Wobble</strong>
+                    <p style="margin-bottom: 0;">Click the <strong>DJ WOBBLE</strong> button. This switches the DSP to a rich <em>Sawtooth wave</em> at a low 55 Hz sub-bass, and offsets the anti-wave by +3.0 Hz. Because the waves oscillate at different speeds, they rapidly drift in and out of phase, creating the classic throbbing "wub-wub" acoustic beat heavily utilized in electronic music.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: PRACTICAL (MUSIC FILE) -->
+    <div id="musicTab" class="tab-content">
+        <div class="controls">
+
+            <div class="control-group" style="border-top-color: #fff;">
+                <div class="control-header"><label>Audio Source</label></div>
+
+                <!-- FEATURED ARTIST BLOCK -->
+                <div class="artist-block">
+                    <div style="font-size: 0.8em; font-family: 'Space Mono', monospace; margin-bottom: 8px;">> FEATURED ARTIST</div>
+                    <div style="font-size: 1.2em; font-weight: 700; color: #fff; margin-bottom: 10px;">ADAMAN</div>
+                    <button id="loadDefaultBtn" class="action-btn" style="padding: 8px; font-size: 0.8em; margin-bottom: 10px;">LOAD 'ON MY MIND'</button>
+                    <div style="font-size: 0.75em; color: var(--text-muted); line-height: 1.4;">
+                        <a href="https://www.youtube.com/@ADAMAN-007" target="_blank">YouTube Channel (@ADAMAN-007)</a><br>
+                        <a href="https://music.youtube.com/watch?v=Nev2PIWGIng&si=ARM90qql8PgwY-Zp" target="_blank">Original Track Link</a><br>
+                    </div>
+                </div>
+
+                <!-- MANUAL UPLOAD -->
+                <div class="file-upload-wrapper" style="margin-bottom: 15px; width: 100%;">
+                    <button class="file-upload-btn" id="uploadLabel">[ OR UPLOAD CUSTOM AUDIO ]</button>
+                    <input type="file" id="audioUpload" accept="audio/*">
+                </div>
+
+                <button id="playMusicBtn" class="action-btn secondary" disabled>▶ PLAY AUDIO FILE</button>
+                <div style="margin-top: 15px; font-size: 0.75em; color: var(--text-muted); text-align: center;" id="musicStatus">
+                    <em>Awaiting local file selection.</em>
+                </div>
+            </div>
+
+            <div class="control-group" style="border-top-color: var(--accent-danger);">
+                <div class="control-header"><label style="color: var(--accent-danger)">Active Noise Cancellation DSP</label></div>
+
+                <label class="toggle-wrapper" style="color: var(--accent-danger); margin-top: 15px;">
+                    <input type="checkbox" id="invertToggleMusic"> [ ACTIVATE PHASE INVERSION ]
+                </label>
+                <div style="font-size: 0.75em; color: var(--text-muted); margin-bottom: 25px; line-height: 1.4;"><em>Mathematically mirrors the complex broadband waveform.</em></div>
+
+                <div class="control-header"><label>Anti-Signal Volume</label></div>
+                <input type="range" id="ancVolMusic" min="0" max="1" step="0.01" value="1">
+                <div class="input-row">
+                    <span class="input-label">Set Vol:</span>
+                    <div class="num-wrapper">
+                        <input type="number" id="numAncVolMusic" min="0" max="1" step="0.01" value="1" class="num-input">
+                        <span class="num-unit"></span>
+                    </div>
+                </div>
+
+                <div class="control-header" style="margin-top: 25px;"><label>Hardware Latency Delay</label></div>
+                <input type="range" id="ancDelayMusic" min="0" max="2000" step="10" value="0">
+                <div class="input-row">
+                    <span class="input-label">Set Delay:</span>
+                    <div class="num-wrapper">
+                        <input type="number" id="numAncDelayMusic" min="0" max="2000" step="10" value="0" class="num-input">
+                        <span class="num-unit">&mu;s</span>
+                    </div>
+                </div>
+                <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 5px; line-height: 1.4; text-align: right;"><em>Simulates processing time.</em></div>
+            </div>
+        </div>
+
+        <div class="info-panel" style="grid-template-columns: 1.3fr 1fr;">
+            <div class="explanation-side">
+                <h3>Hardware Limitations</h3>
+                <div class="theory-block" style="border-color: var(--accent-danger);">
+                    <strong style="color: var(--accent-danger);">> Real-World Music ANC</strong>
+                    <p>Load the ADAMAN track or upload a file and click Play. Check the <strong>Phase Inversion</strong> box to simulate the ANC micro-processor mathematically inverting the wave. The music will go perfectly silent, and the Resultant oscilloscope will flatline.</p>
+                </div>
+                <div class="theory-block" style="border-color: var(--accent-warning);">
+                    <strong style="color: var(--accent-warning);">> The DSP Latency Problem</strong>
+                    <p>Slide the <strong>Hardware Latency</strong> up slightly. Notice how the sound bleeds back in? The digital processor needs microseconds to calculate the inversion. For high frequencies (short wavelengths), a tiny delay means the anti-noise arrives too late, accidentally causing <em>constructive</em> interference. This is why ANC struggles with sudden, high-pitched noises but easily blocks low-frequency engine hums.</p>
+                </div>
+            </div>
+
+            <div class="math-side">
+                <h3>Signal Flow Architecture</h3>
+                <div class="anc-diagram">
+                    <div>MICROPHONE</div>
+                    <div class="anc-arrow">&darr;</div>
+                    <div class="anc-box">Incoming Noise (y<sub>1</sub>)</div>
+                    <div class="anc-arrow">&darr;</div>
+                    <div class="anc-box" style="border-color: var(--accent-danger); color: var(--accent-danger);">DSP (Phase Shift + Latency)</div>
+                    <div class="anc-arrow">&darr;</div>
+                    <div class="anc-box">Anti-Noise (y<sub>2</sub>)</div>
+                    <div class="anc-arrow">&darr;</div>
+                    <div class="anc-box" style="border-color: var(--stage3); color: var(--stage3);">EAR: y<sub>1</sub> + y<sub>2</sub></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: LIVE MIC -->
+    <div id="micTab" class="tab-content">
+        <div class="warning-box" style="margin-bottom: 20px; text-align: center;">
+            <strong style="color: var(--accent-danger); font-family: 'Space Mono', monospace;">⚠️ CRITICAL MIC WARNING:</strong>
+            You MUST WEAR HEADPHONES if you activate the Live Microphone input. Routing a live mic directly to laptop speakers will immediately trigger a severe, deafening acoustic feedback loop (howling).
+        </div>
+
+        <div class="controls">
+            <div class="control-group" style="border-top-color: var(--stage3);">
+                <div class="control-header"><label style="color: var(--stage3)">Live Hardware Input</label></div>
+                <button id="startMicBtn" class="action-btn mic-btn" style="margin-top: 15px; padding: 20px;">🎤 START LIVE MICROPHONE</button>
+                <div style="margin-top: 15px; font-size: 0.75em; color: var(--text-muted); text-align: center;" id="micStatus">
+                    <em>Awaiting hardware permission.</em>
+                </div>
+            </div>
+
+            <div class="control-group" style="border-top-color: var(--accent-danger);">
+                <div class="control-header"><label style="color: var(--accent-danger)">Active Noise Cancellation DSP</label></div>
+
+                <label class="toggle-wrapper" style="color: var(--accent-danger); margin-top: 15px;">
+                    <input type="checkbox" id="invertToggleMic"> [ ACTIVATE PHASE INVERSION ]
+                </label>
+                <div style="font-size: 0.75em; color: var(--text-muted); margin-bottom: 25px; line-height: 1.4;"><em>Mathematically mirrors incoming mic signal.</em></div>
+
+                <div class="control-header"><label>Anti-Signal Volume</label></div>
+                <input type="range" id="ancVolMic" min="0" max="1" step="0.01" value="1">
+                <div class="input-row">
+                    <span class="input-label">Set Vol:</span>
+                    <div class="num-wrapper">
+                        <input type="number" id="numAncVolMic" min="0" max="1" step="0.01" value="1" class="num-input">
+                        <span class="num-unit"></span>
+                    </div>
+                </div>
+
+                <div class="control-header" style="margin-top: 25px;"><label>Hardware Latency Delay</label></div>
+                <input type="range" id="ancDelayMic" min="0" max="2000" step="10" value="0">
+                <div class="input-row">
+                    <span class="input-label">Set Delay:</span>
+                    <div class="num-wrapper">
+                        <input type="number" id="numAncDelayMic" min="0" max="2000" step="10" value="0" class="num-input">
+                        <span class="num-unit">&mu;s</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <div class="explanation-side" style="grid-column: 1 / -1;">
+                <h3>Live Environmental Testing</h3>
+                <div class="theory-block" style="border-color: var(--stage3);">
+                    <strong style="color: var(--stage3);">> Testing Real-World ANC</strong>
+                    <p>With headphones on, start the microphone. Snap your fingers or speak into the microphone to see the raw wave on the top oscilloscope. When you check <strong>Phase Inversion</strong>, the system will attempt to actively cancel the ambient noise entering your microphone before it reaches your headphones. Because your laptop processes this via Web Audio API, the inherent latency of your operating system (usually 10-30ms) will act as an unavoidable "Hardware Delay," making perfect cancellation of high-frequency speech impossible, perfectly mirroring the physics problem faced by engineers building real ANC headsets.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- HELPER: BIND SLIDER TO NUMBER INPUT WITH GRACEFUL EMPTY HANDLING ---
+    function bindInputs(sliderId, numId, callback) {
+        const slider = document.getElementById(sliderId);
+        const num = document.getElementById(numId);
+
+        slider.addEventListener('input', () => {
+            num.value = slider.value;
+            if(callback) callback();
+        });
+
+        num.addEventListener('input', () => {
+            let val = parseFloat(num.value);
+            if (isNaN(val)) return;
+            let min = parseFloat(slider.min);
+            let max = parseFloat(slider.max);
+            if (val > max) val = max;
+            if (val < min) val = min;
+            slider.value = val;
+            if(callback) callback();
+        });
+
+        num.addEventListener('blur', () => {
+            let val = parseFloat(num.value);
+            if (isNaN(val)) {
+                num.value = slider.min;
+                slider.value = slider.min;
+                if(callback) callback();
+            }
+        });
+    }
+
+    // Bind all UI pairs
+    bindInputs('baseFreq', 'numFreq', () => { updateVisualReadouts(); updateTruePhaseParams(); });
+    bindInputs('vol1', 'numVol1', () => { updateVisualReadouts(); updateTruePhaseParams(); });
+    bindInputs('freqOffset', 'numFreqOff', () => { updateVisualReadouts(); updateTruePhaseParams(); });
+    bindInputs('phaseShift', 'numPhase', () => { updateVisualReadouts(); updateTruePhaseParams(); });
+
+    bindInputs('ancVolMusic', 'numAncVolMusic', updateMusicParams);
+    bindInputs('ancDelayMusic', 'numAncDelayMusic', updateMusicParams);
+
+    bindInputs('ancVolMic', 'numAncVolMic', updateMicParams);
+    bindInputs('ancDelayMic', 'numAncDelayMic', updateMicParams);
+
+    // --- GLOBAL AUDIO STATE ---
+    let audioCtx;
+    let isTonePlaying = false;
+    let isMusicPlaying = false;
+    let isMicLive = false;
+    let currentOscType = 'sine';
+
+    // --- HARD AUDIO KILL SWITCH ---
+    function stopAllAudio() {
+        if(isTonePlaying && tGain1 && tGain2) {
+            tGain1.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+            tGain2.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+            isTonePlaying = false;
+            document.getElementById('playToneBtn').innerText = "▶ PLAY TONES";
+            document.getElementById('playToneBtn').classList.remove('danger');
+            if(autoBeatsInterval) document.getElementById('autoBeatsBtn').click();
+            document.getElementById('djBeatsBtn').classList.remove('active-anim');
+
+            currentOscType = 'sine';
+            document.getElementById('waveType').value = 'sine';
+            if (toneOsc1 && toneOsc2) { toneOsc1.type = 'sine'; toneOsc2.type = 'sine'; }
+        }
+        if(isMusicPlaying && musicAudioEl) {
+            musicAudioEl.pause();
+            isMusicPlaying = false;
+            document.getElementById('playMusicBtn').innerText = "▶ PLAY AUDIO FILE";
+            document.getElementById('playMusicBtn').classList.remove('danger');
+        }
+        if(isMicLive && micStream) {
+            micStream.getTracks().forEach(track => track.stop());
+            if(micSourceNode) micSourceNode.disconnect();
+            micStream = null;
+            isMicLive = false;
+            document.getElementById('startMicBtn').innerText = "🎤 START LIVE MICROPHONE";
+            document.getElementById('startMicBtn').classList.remove('danger');
+            document.getElementById('micStatus').innerHTML = `<em>Hardware disconnected.</em>`;
+        }
+    }
+
+    // --- TAB SYSTEM ---
+    let activeTab = 'theory';
+    function switchTab(tab) {
+        stopAllAudio();
+        activeTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+        if(tab === 'theory') {
+            document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            document.getElementById('theoryTab').classList.add('active');
+            document.getElementById('canvasTitle').innerText = "> THEORETICAL SUPERPOSITION (MATHEMATICAL WAVES)";
+            updateVisualReadouts();
+        } else if (tab === 'music') {
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            document.getElementById('musicTab').classList.add('active');
+            document.getElementById('canvasTitle').innerText = "> LIVE OSCILLOSCOPES (AUDIO FILE)";
+            document.getElementById('interferenceState').innerText = "Awaiting Audio Source...";
+            document.getElementById('interferenceState').style.color = "var(--text-muted)";
+        } else if (tab === 'mic') {
+            document.querySelectorAll('.tab-btn')[2].classList.add('active');
+            document.getElementById('micTab').classList.add('active');
+            document.getElementById('canvasTitle').innerText = "> LIVE OSCILLOSCOPES (MICROPHONE INPUT)";
+            document.getElementById('interferenceState').innerText = "Awaiting Hardware...";
+            document.getElementById('interferenceState').style.color = "var(--text-muted)";
+        }
+    }
+
+    // --- 1. VISUALIZATION ENGINE (CANVAS) ---
+    const canvas = document.getElementById('waveCanvas');
+    const ctx = canvas.getContext('2d');
+    const C_WIDTH = 1000, C_HEIGHT = 400;
+
+    let time = 0;
+
+    function initHighDPI() {
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = C_WIDTH * dpr; canvas.height = C_HEIGHT * dpr;
+        ctx.scale(dpr, dpr);
+    }
+    initHighDPI(); window.addEventListener('resize', initHighDPI);
+
+    const ui = { vol1: document.getElementById('vol1'), phase: document.getElementById('phaseShift'), freqOff: document.getElementById('freqOffset'), stateText: document.getElementById('interferenceState'), waveType: document.getElementById('waveType') };
+
+    function getFloatSafe(id) {
+        let val = parseFloat(document.getElementById(id).value);
+        return isNaN(val) ? 0 : val;
+    }
+
+    function updateVisualReadouts() {
+        if(activeTab !== 'theory') return;
+
+        let fOff = getFloatSafe('numFreqOff');
+        let phase = getFloatSafe('numPhase');
+        let amp = getFloatSafe('numVol1');
+
+        if (fOff !== 0) {
+            ui.stateText.innerText = "Beating (Frequencies Mismatched)";
+            ui.stateText.style.color = "var(--accent-warning)";
+        } else if (amp === 0) {
+            ui.stateText.innerText = "No Wave Generated";
+            ui.stateText.style.color = "var(--text-muted)";
+        } else if (phase === 180) {
+            ui.stateText.innerText = "Perfect Destructive Interference";
+            ui.stateText.style.color = "var(--accent-danger)";
+        } else if (phase === 0 || phase === 360) {
+            ui.stateText.innerText = "Perfect Constructive Interference";
+            ui.stateText.style.color = "var(--stage3)";
+        } else {
+            ui.stateText.innerText = "Partial Interference";
+            ui.stateText.style.color = "var(--text-muted)";
+        }
+    }
+
+    // Waveform mathematics engine
+    function getWaveValue(type, theta) {
+        if (type === 'sine') return Math.sin(theta);
+        if (type === 'square') return Math.sin(theta) > 0 ? 1 : -1;
+        if (type === 'triangle') return (2 / Math.PI) * Math.asin(Math.sin(theta));
+        if (type === 'sawtooth') {
+            let t = (theta % (2 * Math.PI)) / (2 * Math.PI);
+            if (t < 0) t += 1;
+            return 2 * t - 1;
+        }
+        return Math.sin(theta);
+    }
+
+    function drawWave(cy, A, k, omega, phaseOffset, color, type) {
+        ctx.beginPath();
+        for(let x = 0; x <= C_WIDTH; x += 2) {
+            let y = cy - A * getWaveValue(type, k * x - omega * time + phaseOffset);
+            if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+    }
+
+    function drawOscilloscope(cy, analyser, color) {
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        analyser.getByteTimeDomainData(dataArray);
+
+        ctx.strokeStyle = color; ctx.lineWidth = 2;
+        ctx.beginPath();
+        let sliceWidth = C_WIDTH * 1.0 / bufferLength;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+            let v = dataArray[i] / 128.0;
+            let y = cy - (v * 40 - 40);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            x += sliceWidth;
+        }
+        ctx.stroke();
+    }
+
+    function renderAnimation() {
+        time += 0.05;
+        ctx.clearRect(0, 0, C_WIDTH, C_HEIGHT);
+
+        const lanes = [80, 210, 340];
+        const labels = ["SOURCE (y1)", "ANTI-WAVE (y2)", "RESULTANT (y1 + y2)"];
+
+        ctx.strokeStyle = '#334155'; ctx.lineWidth = 1;
+        for(let i=0; i<3; i++) {
+            ctx.beginPath(); ctx.moveTo(0, lanes[i]); ctx.lineTo(C_WIDTH, lanes[i]); ctx.stroke();
+            ctx.fillStyle = '#94a3b8'; ctx.font = '11px "Space Mono"'; ctx.textAlign = 'left';
+            ctx.fillText(labels[i], 10, lanes[i] - 55);
+        }
+
+        if (activeTab === 'theory') {
+            let A1 = getFloatSafe('numVol1') * 40;
+            let A2 = A1;
+            let phaseRad = getFloatSafe('numPhase') * Math.PI / 180;
+            let wType = ui.waveType.value;
+
+            let baseFreq = getFloatSafe('numFreq') || 440;
+            let logScale = Math.log10(Math.max(baseFreq, 20) / 20);
+            let k = 0.02 + 0.03 * logScale;
+            let baseOmega = 0.05 + 0.04 * logScale;
+            let deltaOmega = getFloatSafe('numFreqOff') * 0.01;
+
+            drawWave(lanes[0], A1, k, baseOmega, 0, '#00f0ff', wType);
+            drawWave(lanes[1], A2, k, baseOmega + deltaOmega, phaseRad, '#a855f7', wType);
+
+            ctx.beginPath();
+            for(let x = 0; x <= C_WIDTH; x += 2) {
+                let y1 = A1 * getWaveValue(wType, k * x - baseOmega * time);
+                let y2 = A2 * getWaveValue(wType, k * x - (baseOmega + deltaOmega) * time + phaseRad);
+                let yRes = lanes[2] - (y1 + y2);
+                if (x === 0) ctx.moveTo(x, yRes); else ctx.lineTo(x, yRes);
+            }
+            let phaseDeg = getFloatSafe('numPhase');
+            let resColor = (phaseDeg > 160 && phaseDeg < 200 && getFloatSafe('numFreqOff') === 0) ? '#ef4444' : '#10b981';
+            ctx.strokeStyle = resColor; ctx.lineWidth = 3; ctx.stroke();
+
+        } else {
+            let currAnalyzers = null;
+            let isInverted = false;
+
+            if (activeTab === 'music' && isMusicPlaying) {
+                currAnalyzers = { src: analyserSrcMusic, anti: analyserAntiMusic, res: analyserResMusic };
+                isInverted = document.getElementById('invertToggleMusic').checked;
+            } else if (activeTab === 'mic' && isMicLive) {
+                currAnalyzers = { src: analyserSrcMic, anti: analyserAntiMic, res: analyserResMic };
+                isInverted = document.getElementById('invertToggleMic').checked;
+            }
+
+            if (currAnalyzers) {
+                drawOscilloscope(lanes[0], currAnalyzers.src, '#00f0ff');
+                drawOscilloscope(lanes[1], currAnalyzers.anti, '#a855f7');
+                let resColor = isInverted ? '#ef4444' : '#10b981';
+                drawOscilloscope(lanes[2], currAnalyzers.res, resColor);
+            } else {
+                ctx.strokeStyle = '#00f0ff'; ctx.beginPath(); ctx.moveTo(0, lanes[0]); ctx.lineTo(C_WIDTH, lanes[0]); ctx.stroke();
+                ctx.strokeStyle = '#a855f7'; ctx.beginPath(); ctx.moveTo(0, lanes[1]); ctx.lineTo(C_WIDTH, lanes[1]); ctx.stroke();
+                ctx.strokeStyle = '#10b981'; ctx.beginPath(); ctx.moveTo(0, lanes[2]); ctx.lineTo(C_WIDTH, lanes[2]); ctx.stroke();
+            }
+        }
+        requestAnimationFrame(renderAnimation);
+    }
+    requestAnimationFrame(renderAnimation);
+
+    // --- 2. AUDIO ENGINE: THEORY TONES ---
+    let toneOsc1, toneOsc2, tGain1, tGain2, tDelay2;
+    let autoBeatsInterval = null;
+
+    function initTruePhaseEngine() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        toneOsc1 = audioCtx.createOscillator();
+        toneOsc2 = audioCtx.createOscillator();
+        tGain1 = audioCtx.createGain();
+        tGain2 = audioCtx.createGain();
+        tDelay2 = audioCtx.createDelay(1.0);
+        let masterGain = audioCtx.createGain(); masterGain.gain.value = 0.5;
+
+        let selectedType = document.getElementById('waveType').value;
+        currentOscType = selectedType;
+        toneOsc1.type = selectedType; toneOsc2.type = selectedType;
+
+        toneOsc1.connect(tGain1).connect(masterGain).connect(audioCtx.destination);
+        toneOsc2.connect(tDelay2).connect(tGain2).connect(masterGain).connect(audioCtx.destination);
+
+        toneOsc1.start(); toneOsc2.start();
+        updateTruePhaseParams();
+    }
+
+    function updateTruePhaseParams() {
+        if(!isTonePlaying) return;
+
+        let baseFreq = getFloatSafe('numFreq') || 440;
+        let vol = getFloatSafe('numVol1');
+        let phaseDeg = getFloatSafe('numPhase');
+        let fOff = getFloatSafe('numFreqOff');
+
+        let selectedType = document.getElementById('waveType').value;
+        toneOsc1.type = selectedType;
+        toneOsc2.type = selectedType;
+
+        toneOsc1.frequency.setTargetAtTime(baseFreq, audioCtx.currentTime, 0.1);
+        toneOsc2.frequency.setTargetAtTime(baseFreq + fOff, audioCtx.currentTime, 0.1);
+
+        tGain1.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.05);
+        tGain2.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.05);
+
+        let delaySeconds = (phaseDeg / 360.0) * (1.0 / baseFreq);
+        tDelay2.delayTime.setTargetAtTime(delaySeconds, audioCtx.currentTime, 0.05);
+    }
+
+    document.getElementById('waveType').addEventListener('change', updateTruePhaseParams);
+
+    document.getElementById('playToneBtn').addEventListener('click', (e) => {
+        if(!isTonePlaying) {
+            if(!toneOsc1) initTruePhaseEngine();
+            else {
+                let selectedType = document.getElementById('waveType').value;
+                toneOsc1.type = selectedType; toneOsc2.type = selectedType;
+                tGain1.gain.value = getFloatSafe('numVol1');
+                tGain2.gain.value = getFloatSafe('numVol1');
+            }
+            isTonePlaying = true;
+            e.target.innerText = "⏸ STOP TONES"; e.target.classList.add('danger');
+        } else {
+            stopAllAudio();
+        }
+    });
+
+    document.getElementById('autoBeatsBtn').addEventListener('click', (e) => {
+        let btn = e.target;
+        if(autoBeatsInterval) {
+            clearInterval(autoBeatsInterval); autoBeatsInterval = null;
+            btn.classList.remove('active-anim', 'danger'); btn.innerText = "AUTO BEATS";
+            document.getElementById('freqOffset').value = 0;
+            document.getElementById('numFreqOff').value = "0.0";
+            updateVisualReadouts(); updateTruePhaseParams();
+        } else {
+            if(!isTonePlaying) document.getElementById('playToneBtn').click();
+            document.getElementById('phaseShift').value = 180;
+            document.getElementById('numPhase').value = 180;
+
+            btn.classList.add('active-anim', 'danger'); btn.innerText = "STOP SWEEP";
+            let t = 0;
+            autoBeatsInterval = setInterval(() => {
+                t += 0.05;
+                let sweepVal = 25 * Math.sin(t);
+                document.getElementById('freqOffset').value = sweepVal;
+                document.getElementById('numFreqOff').value = sweepVal.toFixed(1);
+                updateVisualReadouts(); updateTruePhaseParams();
+            }, 50);
+        }
+    });
+
+    // DJ WOBBLE PRESET
+    document.getElementById('djBeatsBtn').addEventListener('click', (e) => {
+        let btn = e.target;
+        if (btn.classList.contains('active-anim')) {
+            btn.classList.remove('active-anim');
+            document.getElementById('freqOffset').value = 0;
+            document.getElementById('numFreqOff').value = "0.0";
+            document.getElementById('waveType').value = 'sine';
+            updateVisualReadouts(); updateTruePhaseParams();
+        } else {
+            if(!isTonePlaying) document.getElementById('playToneBtn').click();
+            if(autoBeatsInterval) document.getElementById('autoBeatsBtn').click();
+
+            btn.classList.add('active-anim');
+            document.getElementById('phaseShift').value = 0; document.getElementById('numPhase').value = 0;
+            document.getElementById('baseFreq').value = 55; document.getElementById('numFreq').value = 55;
+            document.getElementById('freqOffset').value = 3.0; document.getElementById('numFreqOff').value = "3.0";
+
+            document.getElementById('waveType').value = 'sawtooth';
+
+            updateVisualReadouts(); updateTruePhaseParams();
+        }
+    });
+
+    // --- 3. AUDIO ENGINE: PRACTICAL MUSIC ---
+    let musicAudioEl = new Audio();
+    let musicSourceNode, mOrigGain, mAncGain, mAncDelay, finalResGainMusic;
+    let analyserSrcMusic, analyserAntiMusic, analyserResMusic;
+
+    // Load Default Track Button
+    document.getElementById('loadDefaultBtn').addEventListener('click', () => {
+        if(isMusicPlaying) stopAllAudio();
+
+        document.getElementById('uploadLabel').innerText = "[ LOADED: 'ON MY MIND' (CLICK TO CHANGE) ]";
+        document.getElementById('uploadLabel').style.borderColor = "var(--stage1)";
+        document.getElementById('uploadLabel').style.color = "var(--stage1)";
+
+        musicAudioEl.src = 'audio.mp3';
+        document.getElementById('playMusicBtn').disabled = false;
+        document.getElementById('playMusicBtn').classList.remove('secondary');
+        document.getElementById('musicStatus').innerHTML = `<span style="color:var(--stage1);">'ON MY MIND' Loaded. Ready to play.</span>`;
+    });
+
+    document.getElementById('audioUpload').addEventListener('change', function(e) {
+        let file = e.target.files[0];
+        if(!file) return;
+
+        if(isMusicPlaying) stopAllAudio();
+
+        document.getElementById('uploadLabel').innerText = "[ " + file.name.substring(0,15) + "... (CLICK TO CHANGE) ]";
+        document.getElementById('uploadLabel').style.borderColor = "var(--stage3)";
+        document.getElementById('uploadLabel').style.color = "var(--stage3)";
+
+        musicAudioEl.src = URL.createObjectURL(file);
+        document.getElementById('playMusicBtn').disabled = false;
+        document.getElementById('playMusicBtn').classList.remove('secondary');
+        document.getElementById('musicStatus').innerHTML = `Custom File Loaded. Ready to play.`;
+    });
+
+    function initMusicEngine() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        if(!musicSourceNode) {
+            musicSourceNode = audioCtx.createMediaElementSource(musicAudioEl);
+            mOrigGain = audioCtx.createGain(); mAncGain = audioCtx.createGain();
+            mAncDelay = audioCtx.createDelay(2.0); finalResGainMusic = audioCtx.createGain();
+
+            analyserSrcMusic = audioCtx.createAnalyser(); analyserAntiMusic = audioCtx.createAnalyser(); analyserResMusic = audioCtx.createAnalyser();
+            analyserSrcMusic.fftSize = 2048; analyserAntiMusic.fftSize = 2048; analyserResMusic.fftSize = 2048;
+
+            musicSourceNode.connect(mOrigGain); mOrigGain.connect(analyserSrcMusic);
+            musicSourceNode.connect(mAncDelay).connect(mAncGain); mAncGain.connect(analyserAntiMusic);
+
+            mOrigGain.connect(finalResGainMusic); mAncGain.connect(finalResGainMusic);
+            finalResGainMusic.connect(analyserResMusic); analyserResMusic.connect(audioCtx.destination);
+
+            musicAudioEl.loop = true;
+        }
+        updateMusicParams();
+    }
+
+    function updateMusicParams() {
+        if(!mOrigGain) return;
+        mOrigGain.gain.value = 1.0;
+
+        let invert = document.getElementById('invertToggleMusic').checked;
+        let ancVol = getFloatSafe('numAncVolMusic');
+        let delayUs = getFloatSafe('numAncDelayMusic');
+
+        let finalAncGain = invert ? -ancVol : ancVol;
+        mAncGain.gain.setTargetAtTime(finalAncGain, audioCtx.currentTime, 0.05);
+        mAncDelay.delayTime.setTargetAtTime(delayUs / 1000000.0, audioCtx.currentTime, 0.05);
+
+        if (invert && delayUs === 0 && ancVol === 1) {
+            document.getElementById('interferenceState').innerText = "Perfect Phase Cancellation (Silence)";
+            document.getElementById('interferenceState').style.color = "var(--accent-danger)";
+        } else if (invert) {
+            document.getElementById('interferenceState').innerText = "Imperfect Cancellation (Hardware Delay Bleed)";
+            document.getElementById('interferenceState').style.color = "var(--accent-warning)";
+        } else {
+            document.getElementById('interferenceState').innerText = "Standard Playback (No ANC)";
+            document.getElementById('interferenceState').style.color = "var(--text-muted)";
+        }
+    }
+
+    document.getElementById('invertToggleMusic').addEventListener('change', updateMusicParams);
+
+    document.getElementById('playMusicBtn').addEventListener('click', (e) => {
+        if(!isMusicPlaying) {
+            initMusicEngine();
+            musicAudioEl.play();
+            isMusicPlaying = true;
+            e.target.innerText = "⏸ STOP AUDIO FILE"; e.target.classList.add('danger');
+        } else {
+            stopAllAudio();
+        }
+    });
+
+    // --- 4. AUDIO ENGINE: LIVE MIC ---
+    let micStream = null;
+    let micSourceNode, micOrigGain, micAncGain, micAncDelay, finalResGainMic;
+    let analyserSrcMic, analyserAntiMic, analyserResMic;
+
+    document.getElementById('startMicBtn').addEventListener('click', async (e) => {
+        if(isMicLive) { stopAllAudio(); return; }
+
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+
+            if(!micOrigGain) {
+                micOrigGain = audioCtx.createGain(); micAncGain = audioCtx.createGain();
+                micAncDelay = audioCtx.createDelay(2.0); finalResGainMic = audioCtx.createGain();
+
+                analyserSrcMic = audioCtx.createAnalyser(); analyserAntiMic = audioCtx.createAnalyser(); analyserResMic = audioCtx.createAnalyser();
+                analyserSrcMic.fftSize = 2048; analyserAntiMic.fftSize = 2048; analyserResMic.fftSize = 2048;
+
+                micOrigGain.connect(analyserSrcMic);
+                micAncDelay.connect(micAncGain).connect(analyserAntiMic);
+
+                micOrigGain.connect(finalResGainMic); micAncGain.connect(finalResGainMic);
+                finalResGainMic.connect(analyserResMic); analyserResMic.connect(audioCtx.destination);
+            }
+
+            micSourceNode = audioCtx.createMediaStreamSource(micStream);
+            micSourceNode.connect(micOrigGain);
+            micSourceNode.connect(micAncDelay);
+
+            isMicLive = true;
+            e.target.innerText = "⏸ STOP LIVE MICROPHONE";
+            e.target.classList.add('danger');
+            document.getElementById('micStatus').innerHTML = `<span style="color:var(--accent-danger)">MIC ACTIVE. DSP RUNNING.</span>`;
+
+            updateMicParams();
+        } catch(err) {
+            alert("Microphone access denied. Please allow microphone permissions in your browser.");
+        }
+    });
+
+    function updateMicParams() {
+        if(!micOrigGain) return;
+        micOrigGain.gain.value = 1.0;
+
+        let invert = document.getElementById('invertToggleMic').checked;
+        let ancVol = getFloatSafe('numAncVolMic');
+        let delayUs = getFloatSafe('numAncDelayMic');
+
+        let finalAncGain = invert ? -ancVol : ancVol;
+        micAncGain.gain.setTargetAtTime(finalAncGain, audioCtx.currentTime, 0.05);
+        micAncDelay.delayTime.setTargetAtTime(delayUs / 1000000.0, audioCtx.currentTime, 0.05);
+
+        if (invert && delayUs === 0 && ancVol === 1) {
+            document.getElementById('interferenceState').innerText = "Live Active Noise Cancellation";
+            document.getElementById('interferenceState').style.color = "var(--accent-danger)";
+        } else if (invert) {
+            document.getElementById('interferenceState').innerText = "Imperfect Cancellation (Hardware Delay Bleed)";
+            document.getElementById('interferenceState').style.color = "var(--accent-warning)";
+        } else {
+            document.getElementById('interferenceState').innerText = "Mic Passthrough (No ANC)";
+            document.getElementById('interferenceState').style.color = "var(--text-muted)";
+        }
+    }
+
+    document.getElementById('invertToggleMic').addEventListener('change', updateMicParams);
+
+</script>
+</body>
+</html>

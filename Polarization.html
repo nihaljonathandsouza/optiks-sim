@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polarization & Wave Plates</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-base: #000000; --bg-panel: #0a0a0c; --bg-inset: #111116;
+            --border-main: #00f0ff; --border-dim: #334155;
+            --text-main: #e2e8f0; --text-muted: #94a3b8; --text-data: #00f0ff;
+            --accent-primary: #00f0ff; --accent-warning: #ffcc00;
+            --stage0: #ffffff; --stage1: #00f0ff; --stage2: #a855f7; --stage3: #10b981;
+        }
+
+        body { font-family: 'Space Grotesk', sans-serif; background: var(--bg-base); color: var(--text-main); padding: 2vw; line-height: 1.6; margin: 0; }
+        h1, h2, h3 { text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin: 0; }
+        .value-display, .math-val { font-family: 'Space Mono', monospace; font-weight: 700; }
+
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; background: var(--bg-panel); padding: 2.5%; border: 1px solid var(--border-dim); box-sizing: border-box; }
+        .header-section { margin-bottom: 20px; border-bottom: 2px solid var(--border-main); padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+
+        .back-link { color: var(--text-muted); text-decoration: none; font-family: 'Space Mono', monospace; font-size: 0.9em; transition: 0.2s; border: 1px solid var(--border-dim); padding: 5px 10px;}
+        .back-link:hover { color: var(--text-main); border-color: var(--text-main); }
+
+        .btn-group { display: flex; gap: 10px; }
+        button.action-btn { background: var(--accent-primary); color: #000; border: none; padding: 6px 15px; font-family: 'Space Mono', monospace; font-weight: 700; cursor: pointer; border-radius: 2px; transition: 0.2s; }
+        button.action-btn:hover { opacity: 0.8; }
+        button.action-btn.secondary { background: var(--border-dim); color: var(--text-main); }
+        button.action-btn.preset { background: rgba(0, 240, 255, 0.1); border: 1px solid var(--accent-primary); color: var(--accent-primary); font-size: 0.75em; transition: 0.3s; }
+        button.action-btn.preset:hover { background: var(--accent-primary); color: #000; }
+
+        /* UI Locking Classes */
+        button.action-btn.preset.active-anim { background: var(--accent-primary); color: #000; box-shadow: 0 0 15px var(--accent-primary); pointer-events: none; }
+        button.action-btn.preset.dimmed { opacity: 0.3; pointer-events: none; filter: grayscale(100%); }
+        .controls.dimmed { opacity: 0.4; pointer-events: none; transition: 0.3s; }
+
+        .setup-tracker { background: rgba(0, 240, 255, 0.05); border: 1px dashed var(--border-main); padding: 10px 15px; margin-bottom: 20px; font-family: 'Space Mono', monospace; font-size: 0.85em; color: var(--text-data); text-align: center; letter-spacing: 0.5px; }
+
+        .canvas-box { background: var(--bg-inset); border: 1px solid var(--border-dim); padding: 15px; display: flex; flex-direction: column; margin-bottom: 20px; }
+        .canvas-label { font-size: 0.8em; color: var(--text-muted); margin-bottom: 12px; font-family: 'Space Mono', monospace; display: flex; justify-content: space-between; align-items: center;}
+
+        canvas { width: 100%; display: block; background: #000; border: 1px solid #1a202c; box-sizing: border-box; aspect-ratio: 1000 / 300; }
+
+        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .control-group { display: flex; flex-direction: column; background: var(--bg-inset); padding: 15px; border: 1px solid var(--border-dim); border-top-width: 3px; }
+        .control-group:nth-child(1) { border-top-color: var(--stage1); }
+        .control-group:nth-child(2) { border-top-color: var(--stage2); }
+        .control-group:nth-child(3) { border-top-color: var(--stage3); }
+
+        .control-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        label { font-weight: 600; font-size: 0.85em; color: var(--text-muted); text-transform: uppercase; margin: 0; }
+
+        select { background: #000; color: var(--text-main); border: 1px solid var(--border-dim); padding: 5px; font-family: 'Space Mono', monospace; margin-bottom: 15px; width: 100%; outline: none; cursor: pointer; }
+        input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; }
+        input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: var(--border-dim); }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 8px; background: #fff; margin-top: -6px; border-radius: 0; }
+
+        .num-input { background: #000; border: 1px solid var(--border-dim); border-radius: 3px; padding: 3px 5px; font-family: 'Space Mono', monospace; font-size: 1em; width: 60px; text-align: center; outline: none; font-weight: bold; }
+        .num-input:focus { border-color: var(--accent-primary); }
+
+        .info-panel { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 900px) { .info-panel { grid-template-columns: 1fr 1.3fr; } }
+
+        .math-side, .explanation-side { background: var(--bg-inset); padding: 20px; border: 1px solid var(--border-dim); }
+        h3 { border-bottom: 1px solid var(--border-dim); padding-bottom: 10px; margin-bottom: 15px; color: var(--text-muted); font-size: 1em; }
+
+        .math-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;}
+        .math-box { background: var(--bg-panel); border: 1px solid var(--border-dim); padding: 12px; font-family: 'Space Mono', monospace; font-size: 0.85em; }
+        .math-box-title { color: var(--text-muted); margin-bottom: 8px; font-size: 0.9em; text-transform: uppercase; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;}
+        .matrix-row { display: flex; justify-content: space-between; margin: 4px 0; }
+        .intensity-calc { color: var(--text-muted); margin-top: 10px; border-top: 1px dashed var(--border-dim); padding-top: 8px; font-size: 0.95em; line-height: 1.5; }
+
+        .theory-block { margin-bottom: 20px; background: var(--bg-panel); border-left: 3px solid var(--border-dim); padding: 12px 15px; }
+        .theory-block:last-child { margin-bottom: 0; }
+        .theory-block strong { color: var(--text-main); font-family: 'Space Mono', monospace; text-transform: uppercase; font-size: 0.9em; display: block; margin-bottom: 5px; }
+        .theory-block p { margin: 8px 0 0 0; color: var(--text-muted); font-size: 0.9em; line-height: 1.5; }
+        .theory-block ul { margin: 8px 0 0 0; padding-left: 20px; color: var(--text-muted); font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-section">
+        <h2>Physical Optics: Polarization Bench</h2>
+        <a href="index.html" class="back-link">&larr; Return to Dashboard</a>
+    </div>
+
+    <div class="setup-tracker">
+        [WAVE PROPAGATION: Towards Observer] &rarr; [STAGE 1] &rarr; [STAGE 2] &rarr; [STAGE 3]
+    </div>
+
+    <div class="canvas-box">
+        <div class="canvas-label">
+            <span id="viewLabel">> ISOMETRIC WAVE PROPAGATION (3D)</span>
+            <div class="btn-group">
+                <button id="toggleViewBtn" class="action-btn secondary">CYCLE VIEW MODE (3D &rarr; FRONT &rarr; 2D)</button>
+                <button id="playBtn" class="action-btn">PAUSE</button>
+            </div>
+        </div>
+        <canvas id="polarizationCanvas"></canvas>
+
+        <!-- Automated Demo Presets -->
+        <div style="margin-top: 15px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; padding-top: 15px; border-top: 1px dashed var(--border-dim);">
+            <div style="width: 100%; text-align: center; color: var(--text-muted); font-size: 0.8em; font-family: 'Space Mono', monospace; margin-bottom: 5px;">> AUTOMATED PRESENTATION (5&deg; / sec)</div>
+            <button class="action-btn preset" onclick="applyPreset('linear', this)">LINEAR ROTATION (HWP)</button>
+            <button class="action-btn preset" onclick="applyPreset('elliptical', this)">ELLIPTICAL (QWP)</button>
+            <button class="action-btn preset" onclick="applyPreset('circular', this)">PERFECT CIRCULAR (QWP)</button>
+            <button class="action-btn preset" onclick="applyPreset('crossed', this)" style="border-color: var(--accent-warning); color: var(--accent-warning);">CROSSED FILTERS (0%)</button>
+            <button class="action-btn preset" onclick="applyPreset('paradox', this)" style="border-color: #a855f7; color: #a855f7;">3-POLARIZER PARADOX (12.5%)</button>
+        </div>
+    </div>
+
+    <div class="controls" id="mainControls">
+        <div class="control-group">
+            <div class="control-header"><label style="color: var(--stage1)">Element 1</label></div>
+            <select disabled><option>Linear Polarizer</option></select>
+            <div class="control-header"><label>Transmission Axis</label></div>
+            <input type="range" id="ang1" min="0" max="180" step="0.1" value="45">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <span style="font-size: 0.8em; color: var(--text-muted); font-family: 'Space Mono', monospace;">Set Angle:</span>
+                <div><input type="number" id="num1" min="0" max="180" step="0.1" value="45" class="num-input" style="color: var(--stage1);"> <span style="color: var(--text-muted); font-family: 'Space Mono', monospace;">&deg;</span></div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="control-header"><label style="color: var(--stage2)">Element 2</label></div>
+            <select id="type2">
+                <option value="none">None</option>
+                <option value="polarizer">Linear Polarizer</option>
+                <option value="hwp">Half-Wave Plate (HWP)</option>
+                <option value="qwp" selected>Quarter-Wave Plate (QWP)</option>
+            </select>
+            <div class="control-header"><label id="label2">Fast Axis</label></div>
+            <input type="range" id="ang2" min="0" max="180" step="0.1" value="0">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <span style="font-size: 0.8em; color: var(--text-muted); font-family: 'Space Mono', monospace;">Set Angle:</span>
+                <div><input type="number" id="num2" min="0" max="180" step="0.1" value="0" class="num-input" style="color: var(--stage2);"> <span style="color: var(--text-muted); font-family: 'Space Mono', monospace;">&deg;</span></div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="control-header"><label style="color: var(--stage3)">Element 3</label></div>
+            <select id="type3">
+                <option value="none" selected>None</option>
+                <option value="polarizer">Linear Polarizer</option>
+                <option value="hwp">Half-Wave Plate (HWP)</option>
+                <option value="qwp">Quarter-Wave Plate (QWP)</option>
+            </select>
+            <div class="control-header"><label id="label3">Transmission Axis</label></div>
+            <input type="range" id="ang3" min="0" max="180" step="0.1" value="90">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <span style="font-size: 0.8em; color: var(--text-muted); font-family: 'Space Mono', monospace;">Set Angle:</span>
+                <div><input type="number" id="num3" min="0" max="180" step="0.1" value="90" class="num-input" style="color: var(--stage3);"> <span style="color: var(--text-muted); font-family: 'Space Mono', monospace;">&deg;</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-panel">
+        <div class="math-side">
+            <h3>Jones Vector Analytics</h3>
+            <div class="math-grid">
+                <div class="math-box" style="border-color: var(--stage1)">
+                    <div class="math-box-title" style="color: var(--stage1)">Stage 1 Vector</div>
+                    <div class="matrix-row"><span>Ex:</span><span id="v1x">0.00</span></div>
+                    <div class="matrix-row"><span>Ey:</span><span id="v1y">0.00</span></div>
+                    <div class="intensity-calc" id="calc1">
+                        <strong>Unpolarized &rarr; Linear:</strong><br>
+                        Averaging Malus's law &lang;cos&sup2;&theta;&rang; over all random input waves perfectly halves the intensity.<br>
+                        I = 100% &times; 0.5 = <span style="color: var(--stage1)">50.0%</span>
+                    </div>
+                </div>
+                <div class="math-box" style="border-color: var(--stage2)">
+                    <div class="math-box-title" style="color: var(--stage2)">Stage 2 Vector</div>
+                    <div class="matrix-row"><span>Ex:</span><span id="v2x">0.00</span></div>
+                    <div class="matrix-row"><span>Ey:</span><span id="v2y">0.00</span></div>
+                    <div class="intensity-calc" id="calc2">No Element</div>
+                </div>
+            </div>
+
+            <div class="math-box" style="border-color: var(--stage3); margin-bottom: 0;">
+                <div class="math-box-title" style="color: var(--stage3)">Final Stage 3 Vector</div>
+                <div style="display: flex; justify-content: space-between;">
+                    <div style="width: 50%;">
+                        <div class="matrix-row"><span>Ex:</span><span id="v3x">0.00</span></div>
+                        <div class="matrix-row"><span>Ey:</span><span id="v3y">0.00</span></div>
+                        <div class="intensity-calc" id="calc3">No Element</div>
+                    </div>
+                    <div style="text-align: right; width: 45%;">
+                        <div style="color: var(--accent-warning); margin-bottom: 5px; font-weight: bold;" id="finalState">Linear</div>
+                        <div style="color: var(--text-main); font-size: 1.2em;">Total Int: <span id="int3">50%</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="explanation-side">
+            <h3>Theoretical Foundations</h3>
+
+            <div class="theory-block" style="border-color: var(--accent-warning);">
+                <strong style="color: var(--accent-warning);">> The 3-Polarizer "Paradox"</strong>
+                <p>This is historically called a paradox, but it perfectly follows the rules of vector projection. If you cross two polarizers at 0&deg; and 90&deg;, 100% of the light is blocked because a vertical wave has zero horizontal components. However, if you insert a third polarizer <em>between</em> them at 45&deg;, the first vertical wave is forced to project itself diagonally. This new diagonal wave now possesses a horizontal component, allowing exactly 12.5% of the original light to successfully slip through the final 90&deg; filter!</p>
+            </div>
+
+            <div class="theory-block" style="border-color: var(--stage2);">
+                <strong>> Fast Axis vs. Transmission Axis</strong>
+                <p><strong>Polarizers</strong> have a <em>Transmission Axis</em>. They absorb any electric field vector perpendicular to this line.<br>
+                <strong>Waveplates</strong> have a <em>Fast Axis</em>. They are made from birefringent crystals where light traveling along the Fast Axis moves slightly faster than on the orthogonal Slow Axis. Because these axes are physically locked 90&deg; apart inside the crystal lattice, changing the Fast Axis slider automatically rotates the entire physical crystal.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- UI Synchronisation ---
+    const controlsList = ['1', '2', '3'];
+    controlsList.forEach(id => {
+        const slider = document.getElementById('ang' + id);
+        const number = document.getElementById('num' + id);
+        slider.addEventListener('input', () => { number.value = slider.value; calculatePhysics(); });
+        number.addEventListener('input', () => {
+            let val = parseFloat(number.value) || 0;
+            if (val > 180) val = 180; if (val < 0) val = 0;
+            slider.value = val; calculatePhysics();
+        });
+    });
+
+    function updateLabels() {
+        const t2 = document.getElementById('type2').value;
+        const t3 = document.getElementById('type3').value;
+        document.getElementById('label2').innerText = (t2 === 'polarizer') ? "Transmission Axis" : "Fast Axis";
+        document.getElementById('label3').innerText = (t3 === 'polarizer') ? "Transmission Axis" : "Fast Axis";
+        calculatePhysics();
+    }
+
+    document.getElementById('type2').addEventListener('change', updateLabels);
+    document.getElementById('type3').addEventListener('change', updateLabels);
+
+    // --- Complex Math Engine ---
+    class Complex {
+        constructor(r, i) { this.r = r; this.i = i; }
+        add(c) { return new Complex(this.r + c.r, this.i + c.i); }
+        mul(c) { return new Complex(this.r * c.r - this.i * c.i, this.r * c.i + this.i * c.r); }
+        scale(s) { return new Complex(this.r * s, this.i * s); }
+        mag2() { return this.r * this.r + this.i * this.i; }
+        mag() { return Math.sqrt(this.mag2()); }
+        arg() { return Math.atan2(this.i, this.r); }
+        format() {
+            let rStr = this.r.toFixed(2);
+            let iStr = Math.abs(this.i).toFixed(2);
+            let sign = this.i >= 0 ? "+" : "-";
+            return `${rStr} ${sign} ${iStr}i`;
+        }
+    }
+
+    function getRetarderMatrix(theta_deg, phase_shift) {
+        let th = theta_deg * Math.PI / 180;
+        let cos = Math.cos(th), sin = Math.sin(th);
+        let cos2 = cos*cos, sin2 = sin*sin, sincos = sin*cos;
+        let e_iphi = new Complex(Math.cos(phase_shift), Math.sin(phase_shift));
+        let one = new Complex(1, 0);
+        let m11 = new Complex(cos2, 0).add( e_iphi.scale(sin2) );
+        let m12 = new Complex(sincos, 0).mul( one.add(e_iphi.scale(-1)) );
+        let m22 = new Complex(sin2, 0).add( e_iphi.scale(cos2) );
+        return [[m11, m12], [m12, m22]];
+    }
+
+    function getPolarizerMatrix(theta_deg) {
+        let th = theta_deg * Math.PI / 180;
+        let cos = Math.cos(th), sin = Math.sin(th);
+        return [
+            [new Complex(cos*cos, 0), new Complex(sin*cos, 0)],
+            [new Complex(sin*cos, 0), new Complex(sin*sin, 0)]
+        ];
+    }
+
+    function applyMatrix(matrix, vector) {
+        let v0 = matrix[0][0].mul(vector[0]).add(matrix[0][1].mul(vector[1]));
+        let v1 = matrix[1][0].mul(vector[0]).add(matrix[1][1].mul(vector[1]));
+        return [v0, v1];
+    }
+
+    function getTiltAngle(Ex, Ey) {
+        let Ax = Ex.mag(), Ay = Ey.mag();
+        if (Ax < 0.001 && Ay < 0.001) return 0;
+        if (Ax < 0.001) return 90;
+        if (Ay < 0.001) return 0;
+        let phaseDiff = Ey.arg() - Ex.arg();
+        let num = 2 * Ax * Ay * Math.cos(phaseDiff);
+        let den = Ax * Ax - Ay * Ay;
+        let psi = 0.5 * Math.atan2(num, den);
+        let deg = psi * 180 / Math.PI;
+        if (deg < 0) deg += 180;
+        return deg;
+    }
+
+    function determineState(Ex, Ey, intensity) {
+        if (intensity < 0.001) return "Blocked (0%)";
+        let phaseDiff = Math.abs(Ex.arg() - Ey.arg()) % Math.PI;
+        if (phaseDiff > Math.PI/2) phaseDiff = Math.PI - phaseDiff;
+        let Ax = Ex.mag(), Ay = Ey.mag();
+        if (Ax < 0.01 || Ay < 0.01 || phaseDiff < 0.1 || Math.abs(phaseDiff - Math.PI) < 0.1) return "Linear Polarization";
+        else if (Math.abs(phaseDiff - Math.PI/2) < 0.1 && Math.abs(Ax - Ay) < 0.05) return "Circular Polarization";
+        else return "Elliptical Polarization";
+    }
+
+    // --- Physics Calculation ---
+    let physicsState = {};
+    function calculatePhysics() {
+        let ang1 = parseFloat(document.getElementById('num1').value) || 0;
+        let ang2 = parseFloat(document.getElementById('num2').value) || 0;
+        let ang3 = parseFloat(document.getElementById('num3').value) || 0;
+        let t2 = document.getElementById('type2').value;
+        let t3 = document.getElementById('type3').value;
+
+        let E_in = [new Complex(Math.cos(ang1 * Math.PI/180), 0), new Complex(Math.sin(ang1 * Math.PI/180), 0)];
+        let int1 = 0.5;
+
+        let E2 = E_in, int2 = int1;
+        let calc2Text = "<strong>No Element Active</strong>";
+        if (t2 !== 'none') {
+            let M2 = t2 === 'polarizer' ? getPolarizerMatrix(ang2) : t2 === 'hwp' ? getRetarderMatrix(ang2, Math.PI) : getRetarderMatrix(ang2, Math.PI/2);
+            E2 = applyMatrix(M2, E_in);
+            int2 = 0.5 * (E2[0].mag2() + E2[1].mag2());
+
+            if (t2 === 'polarizer') {
+                let prevAngle = ang1;
+                let relAngle = Math.abs(ang2 - prevAngle) % 180;
+                if (relAngle > 90) relAngle = 180 - relAngle;
+                calc2Text = `<strong>Malus's Law:</strong><br>&Delta;&theta; = |${ang2.toFixed(1)}&deg; - ${prevAngle.toFixed(1)}&deg;| = ${relAngle.toFixed(1)}&deg;<br>I = ${(int1*100).toFixed(1)}% &times; cos&sup2;(${relAngle.toFixed(1)}&deg;)<br>&nbsp;= <span style="color: var(--stage2)">${(int2*100).toFixed(1)}%</span>`;
+            } else {
+                calc2Text = `<strong>Waveplate Phase Shift:</strong><br>100% Transmission.<br>I = <span style="color: var(--stage2)">${(int2*100).toFixed(1)}%</span>`;
+            }
+        }
+
+        let E3 = E2, int3 = int2;
+        let calc3Text = "<strong>No Element Active</strong>";
+        if (t3 !== 'none') {
+            let M3 = t3 === 'polarizer' ? getPolarizerMatrix(ang3) : t3 === 'hwp' ? getRetarderMatrix(ang3, Math.PI) : getRetarderMatrix(ang3, Math.PI/2);
+            E3 = applyMatrix(M3, E2);
+            int3 = 0.5 * (E3[0].mag2() + E3[1].mag2());
+
+            if (t3 === 'polarizer') {
+                let enteringState = determineState(E2[0], E2[1], int2);
+                if (enteringState.includes("Linear")) {
+                    let prevAngle = getTiltAngle(E2[0], E2[1]);
+                    let relAngle = Math.abs(ang3 - prevAngle) % 180;
+                    if (relAngle > 90) relAngle = 180 - relAngle;
+                    calc3Text = `<strong>Malus's Law:</strong><br>&Delta;&theta; = |${ang3.toFixed(1)}&deg; - ${prevAngle.toFixed(1)}&deg;| = ${relAngle.toFixed(1)}&deg;<br>I = ${(int2*100).toFixed(1)}% &times; cos&sup2;(${relAngle.toFixed(1)}&deg;)<br>&nbsp;= <span style="color: var(--stage3)">${(int3*100).toFixed(1)}%</span>`;
+                } else {
+                    calc3Text = `<strong>Polarizer Filtering:</strong><br>Absorbing orthogonal components of a non-linear wave.<br>I &rarr; <span style="color: var(--stage3)">${(int3*100).toFixed(1)}%</span>`;
+                }
+            } else {
+                calc3Text = `<strong>Waveplate Phase Shift:</strong><br>100% Transmission.<br>I = <span style="color: var(--stage3)">${(int3*100).toFixed(1)}%</span>`;
+            }
+        }
+
+        physicsState = { E1: E_in, i1: int1, E2: E2, i2: int2, E3: E3, i3: int3 };
+
+        document.getElementById('v1x').innerText = E_in[0].format(); document.getElementById('v1y').innerText = E_in[1].format();
+        document.getElementById('v2x').innerText = E2[0].format(); document.getElementById('v2y').innerText = E2[1].format();
+        document.getElementById('v3x').innerText = E3[0].format(); document.getElementById('v3y').innerText = E3[1].format();
+
+        document.getElementById('calc2').innerHTML = calc2Text;
+        document.getElementById('calc3').innerHTML = calc3Text;
+        document.getElementById('int3').innerText = (int3 * 100).toFixed(1) + "%";
+        document.getElementById('finalState').innerText = determineState(E3[0], E3[1], int3);
+    }
+
+    // --- Rendering Engine ---
+    const canvas = document.getElementById('polarizationCanvas');
+    const ctx = canvas.getContext('2d');
+    const C_WIDTH = 1000, C_HEIGHT = 300;
+    let isPlaying = true;
+
+    const VIEW_MODES = ['3d', 'front', '2d'];
+    const VIEW_LABELS = ["> ISOMETRIC WAVE PROPAGATION (3D)", "> FRONTAL PERSPECTIVE (LOOKING DOWN Z-AXIS)", "> OPTICAL AXIS CROSS-SECTION (2D FLAT)"];
+    let currentViewIdx = 0;
+    let time = 0;
+    let isAnimating = false;
+
+    document.getElementById('toggleViewBtn').addEventListener('click', () => {
+        currentViewIdx = (currentViewIdx + 1) % VIEW_MODES.length;
+        document.getElementById('viewLabel').innerText = VIEW_LABELS[currentViewIdx];
+    });
+
+    function draw2DVector(cx, cy, Ex, Ey, intensity, color) {
+        if (intensity < 0.001) {
+            ctx.fillStyle = color; ctx.font = '11px "Space Mono"'; ctx.textAlign = 'center';
+            ctx.fillText("0% INTENSITY", cx, cy - 100); return;
+        }
+        let Ax = Ex.mag(), phix = Ex.arg(); let Ay = Ey.mag(), phiy = Ey.arg();
+        let scale = Math.min(80 * Math.sqrt(intensity / 0.5), 120);
+
+        ctx.beginPath();
+        for (let t = 0; t <= Math.PI * 2.05; t += 0.05) {
+            let x = cx + scale * Ax * Math.cos(t + phix);
+            let y = cy - scale * Ay * Math.cos(t + phiy);
+            if (t === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = color.replace(')', ', 0.3)').replace('rgb', 'rgba');
+        if(color.startsWith('#')) ctx.strokeStyle = color + '40';
+        ctx.lineWidth = 1; ctx.stroke();
+
+        let currentX = cx + scale * Ax * Math.cos(time + phix);
+        let currentY = cy - scale * Ay * Math.cos(time + phiy);
+
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(currentX, currentY);
+        ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.stroke();
+        ctx.beginPath(); ctx.arc(currentX, currentY, 4, 0, Math.PI*2);
+        ctx.fillStyle = color; ctx.fill();
+
+        let tilt = getTiltAngle(Ex, Ey);
+        ctx.fillStyle = color; ctx.font = '11px "Space Mono"'; ctx.textAlign = 'center';
+        ctx.fillText(`Angle: ${tilt.toFixed(1)}\xB0`, cx, cy - 100);
+    }
+
+    function draw3DWave(cx, cy, Ex, Ey, intensity, color) {
+        if (intensity < 0.001) {
+            ctx.fillStyle = color; ctx.font = '11px "Space Mono"'; ctx.textAlign = 'center';
+            ctx.fillText("BLOCKED (0%)", cx, cy - 100); return;
+        }
+
+        let Ax = Ex.mag(), phix = Ex.arg(); let Ay = Ey.mag(), phiy = Ey.arg();
+        let scale = 75 * Math.sqrt(intensity / 0.5); let k = 0.08;
+
+        ctx.beginPath();
+        ctx.moveTo(cx - 80, cy - 70); ctx.lineTo(cx - 80, cy + 70);
+        ctx.moveTo(cx - 80 - 70 * -0.35, cy + 70 * 0.35);
+        ctx.lineTo(cx - 80 - (-70) * -0.35, cy + (-70) * 0.35);
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.font = '10px "Space Mono"';
+        ctx.fillText("X", cx - 80, cy - 75); ctx.fillText("Y", cx - 80 - 75 * -0.35 - 10, cy + 75 * 0.35 + 10);
+
+        ctx.beginPath();
+        for (let z = -80; z <= 80; z += 2) {
+            let phase = k * z - time; let valX = scale * Ax * Math.cos(phase + phix);
+            if (z === -80) ctx.moveTo(cx + z, cy - valX); else ctx.lineTo(cx + z, cy - valX);
+        }
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.25)'; ctx.stroke();
+
+        ctx.beginPath();
+        for (let z = -80; z <= 80; z += 2) {
+            let phase = k * z - time; let valY = scale * Ay * Math.cos(phase + phiy);
+            if (z === -80) ctx.moveTo(cx + z - valY * 0.35, cy + valY * 0.35); else ctx.lineTo(cx + z - valY * 0.35, cy + valY * 0.35);
+        }
+        ctx.strokeStyle = 'rgba(168, 85, 247, 0.25)'; ctx.stroke();
+
+        ctx.beginPath();
+        for (let z = -80; z <= 80; z += 2) {
+            let phase = k * z - time;
+            let valX = scale * Ax * Math.cos(phase + phix); let valY = scale * Ay * Math.cos(phase + phiy);
+            if (z === -80) ctx.moveTo(cx + z - valY * 0.35, cy - valX + valY * 0.35); else ctx.lineTo(cx + z - valY * 0.35, cy - valX + valY * 0.35);
+        }
+        ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke();
+
+        let tilt = getTiltAngle(Ex, Ey);
+        ctx.fillStyle = color; ctx.font = '11px "Space Mono"'; ctx.textAlign = 'center';
+        ctx.fillText(`Angle: ${tilt.toFixed(1)}\xB0`, cx, cy - 100);
+    }
+
+    function drawFrontWave(cx, cy, Ex, Ey, intensity, color) {
+        if (intensity < 0.001) {
+            ctx.fillStyle = color; ctx.font = '11px "Space Mono"'; ctx.textAlign = 'center';
+            ctx.fillText("BLOCKED (0%)", cx, cy - 100); return;
+        }
+
+        let Ax = Ex.mag(), phix = Ex.arg(); let Ay = Ey.mag(), phiy = Ey.arg();
+        let baseScale = 60 * Math.sqrt(intensity / 0.5);
+        let k = 0.08;
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.beginPath();
+        ctx.moveTo(cx, cy); ctx.lineTo(cx - 120, cy - 120);
+        ctx.moveTo(cx, cy); ctx.lineTo(cx + 120, cy - 120);
+        ctx.moveTo(cx, cy); ctx.lineTo(cx - 120, cy + 120);
+        ctx.moveTo(cx, cy); ctx.lineTo(cx + 120, cy + 120);
+        ctx.stroke();
+
+        for(let d=0; d<=300; d+=50) {
+            let p = 150 / (150 + d); let w = 120 * p;
+            ctx.strokeRect(cx - w, cy - w, w*2, w*2);
+        }
+
+        ctx.beginPath();
+        for (let z = 300; z >= 0; z -= 3) {
+            let phase = k * z + time;
+            let valX = baseScale * Ax * Math.cos(phase + phix);
+            let valY = baseScale * Ay * Math.cos(phase + phiy);
+            let pScale = 150 / (150 + z);
+            if (z === 300) ctx.moveTo(cx + valX * pScale, cy - valY * pScale);
+            else ctx.lineTo(cx + valX * pScale, cy - valY * pScale);
+        }
+        ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+
+        let tipPhase = time;
+        let tipX = baseScale * Ax * Math.cos(tipPhase + phix);
+        let tipY = baseScale * Ay * Math.cos(tipPhase + phiy);
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + tipX, cy - tipY);
+        ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.stroke();
+        ctx.beginPath(); ctx.arc(cx + tipX, cy - tipY, 4, 0, Math.PI*2);
+        ctx.fillStyle = color; ctx.fill();
+
+        let tilt = getTiltAngle(Ex, Ey);
+        ctx.fillStyle = color; ctx.font = '11px "Space Mono"'; ctx.textAlign = 'center';
+        ctx.fillText(`Angle: ${tilt.toFixed(1)}\xB0`, cx, cy - 100);
+    }
+
+    function renderLoop() {
+        if (isPlaying) time += 0.015;
+        ctx.clearRect(0, 0, C_WIDTH, C_HEIGHT);
+        const centers = [125, 375, 625, 875];
+        const labels = ["UNPOLARIZED SOURCE", "STAGE 1", "STAGE 2", "STAGE 3"];
+
+        let activeView = VIEW_MODES[currentViewIdx];
+
+        if (activeView === '2d') {
+            ctx.strokeStyle = '#334155'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(0, C_HEIGHT/2); ctx.lineTo(C_WIDTH, C_HEIGHT/2); ctx.stroke();
+        }
+
+        for(let i=0; i<4; i++) {
+            if(activeView === '2d') { ctx.beginPath(); ctx.moveTo(centers[i], 0); ctx.lineTo(centers[i], C_HEIGHT); ctx.stroke(); }
+            ctx.fillStyle = '#94a3b8'; ctx.font = '12px "Space Mono"'; ctx.textAlign = 'center'; ctx.fillText(labels[i], centers[i], 25);
+        }
+
+        if (activeView === '2d') {
+            ctx.beginPath(); ctx.arc(centers[0], C_HEIGHT/2, 80, 0, Math.PI*2); ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.stroke();
+            let randTh = (time * 15) % (Math.PI*2);
+            ctx.beginPath(); ctx.moveTo(centers[0] - 80*Math.cos(randTh), C_HEIGHT/2 - 80*Math.sin(randTh)); ctx.lineTo(centers[0] + 80*Math.cos(randTh), C_HEIGHT/2 + 80*Math.sin(randTh));
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+
+            if(physicsState.E1) {
+                draw2DVector(centers[1], C_HEIGHT/2, physicsState.E1[0], physicsState.E1[1], physicsState.i1, '#00f0ff');
+                draw2DVector(centers[2], C_HEIGHT/2, physicsState.E2[0], physicsState.E2[1], physicsState.i2, '#a855f7');
+                draw2DVector(centers[3], C_HEIGHT/2, physicsState.E3[0], physicsState.E3[1], physicsState.i3, '#10b981');
+            }
+        } else if (activeView === '3d') {
+            ctx.beginPath(); ctx.moveTo(centers[0] - 80, C_HEIGHT/2); ctx.lineTo(centers[0] + 80, C_HEIGHT/2); ctx.strokeStyle = '#334155'; ctx.lineWidth = 1; ctx.stroke();
+            ctx.beginPath(); let randPhase = time * 20;
+            for (let z = -80; z <= 80; z += 2) {
+                let phase = 0.08 * z - time; let val = 60 * Math.cos(phase);
+                let screenX = centers[0] + z - (val * Math.sin(randPhase)) * 0.35; let screenY = C_HEIGHT/2 - (val * Math.cos(randPhase)) + (val * Math.sin(randPhase)) * 0.35;
+                if (z === -80) ctx.moveTo(screenX, screenY); else ctx.lineTo(screenX, screenY);
+            }
+            ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 2; ctx.stroke();
+
+            if(physicsState.E1) {
+                draw3DWave(centers[1], C_HEIGHT/2, physicsState.E1[0], physicsState.E1[1], physicsState.i1, '#00f0ff');
+                draw3DWave(centers[2], C_HEIGHT/2, physicsState.E2[0], physicsState.E2[1], physicsState.i2, '#a855f7');
+                draw3DWave(centers[3], C_HEIGHT/2, physicsState.E3[0], physicsState.E3[1], physicsState.i3, '#10b981');
+            }
+        } else if (activeView === 'front') {
+            ctx.strokeStyle = '#334155'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(centers[0] - 120, C_HEIGHT/2); ctx.lineTo(centers[0] + 120, C_HEIGHT/2); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(centers[0], C_HEIGHT/2 - 120); ctx.lineTo(centers[0], C_HEIGHT/2 + 120); ctx.stroke();
+
+            ctx.beginPath(); let randPhaseFront = time * 20;
+            for (let z = 300; z >= 0; z -= 3) {
+                let phase = 0.08 * z + time; let val = 60 * Math.cos(phase);
+                let pScale = 150 / (150 + z);
+                let screenX = centers[0] + (val * Math.cos(randPhaseFront)) * pScale;
+                let screenY = C_HEIGHT/2 - (val * Math.sin(randPhaseFront)) * pScale;
+                if (z === 300) ctx.moveTo(screenX, screenY); else ctx.lineTo(screenX, screenY);
+            }
+            ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 2; ctx.stroke();
+
+            if(physicsState.E1) {
+                drawFrontWave(centers[1], C_HEIGHT/2, physicsState.E1[0], physicsState.E1[1], physicsState.i1, '#00f0ff');
+                drawFrontWave(centers[2], C_HEIGHT/2, physicsState.E2[0], physicsState.E2[1], physicsState.i2, '#a855f7');
+                drawFrontWave(centers[3], C_HEIGHT/2, physicsState.E3[0], physicsState.E3[1], physicsState.i3, '#10b981');
+            }
+        }
+        requestAnimationFrame(renderLoop);
+    }
+
+    // --- State-Locked UI Preset Animation with Zeroing Protocol ---
+    function applyPreset(presetType, clickedButton) {
+        if (isAnimating) return;
+
+        // UI Locking
+        document.querySelectorAll('.action-btn.preset').forEach(btn => {
+            if (btn === clickedButton) btn.classList.add('active-anim');
+            else btn.classList.add('dimmed');
+        });
+        document.getElementById('mainControls').classList.add('dimmed');
+
+        // Zeroing Protocol: Instantly reset the physical sliders to 0.0 to clear previous states
+        document.getElementById('ang1').value = 0; document.getElementById('num1').value = "0.0";
+        document.getElementById('ang2').value = 0; document.getElementById('num2').value = "0.0";
+        document.getElementById('ang3').value = 0; document.getElementById('num3').value = "0.0";
+
+        let targets = {};
+        if (presetType === 'linear') { document.getElementById('type2').value = 'hwp'; document.getElementById('type3').value = 'none'; targets = {a1: 0, a2: 45, a3: 0}; }
+        else if (presetType === 'elliptical') { document.getElementById('type2').value = 'qwp'; document.getElementById('type3').value = 'none'; targets = {a1: 30, a2: 0, a3: 0}; }
+        else if (presetType === 'circular') { document.getElementById('type2').value = 'qwp'; document.getElementById('type3').value = 'none'; targets = {a1: 45, a2: 0, a3: 0}; }
+        else if (presetType === 'crossed') { document.getElementById('type2').value = 'polarizer'; document.getElementById('type3').value = 'none'; targets = {a1: 0, a2: 90, a3: 0}; }
+        else if (presetType === 'paradox') { document.getElementById('type2').value = 'polarizer'; document.getElementById('type3').value = 'polarizer'; targets = {a1: 0, a2: 45, a3: 90}; }
+
+        updateLabels(); // Calculates physics at 0.0 immediately
+
+        isAnimating = true;
+        let startVals = { a1: 0, a2: 0, a3: 0 };
+        let maxChange = Math.max(targets.a1, targets.a2, targets.a3);
+
+        let durationMs = Math.max((maxChange / 5) * 1000, 2000);
+        let startTime = null;
+
+        function animationStep(timestamp) {
+            if (!startTime) startTime = timestamp;
+            let progress = (timestamp - startTime) / durationMs;
+            if (progress > 1) progress = 1;
+            let ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
+
+            let c1 = startVals.a1 + (targets.a1 - startVals.a1) * ease;
+            let c2 = startVals.a2 + (targets.a2 - startVals.a2) * ease;
+            let c3 = startVals.a3 + (targets.a3 - startVals.a3) * ease;
+
+            document.getElementById('ang1').value = c1; document.getElementById('num1').value = c1.toFixed(1);
+            document.getElementById('ang2').value = c2; document.getElementById('num2').value = c2.toFixed(1);
+            document.getElementById('ang3').value = c3; document.getElementById('num3').value = c3.toFixed(1);
+
+            calculatePhysics();
+
+            if (progress < 1) {
+                requestAnimationFrame(animationStep);
+            } else {
+                isAnimating = false;
+                document.querySelectorAll('.action-btn.preset').forEach(btn => btn.classList.remove('active-anim', 'dimmed'));
+                document.getElementById('mainControls').classList.remove('dimmed');
+            }
+        }
+        requestAnimationFrame(animationStep);
+    }
+
+    document.getElementById('playBtn').addEventListener('click', (e) => {
+        isPlaying = !isPlaying;
+        e.target.innerText = isPlaying ? "PAUSE" : "PLAY";
+        e.target.className = isPlaying ? "action-btn" : "action-btn secondary";
+    });
+
+    function initHighDPI() {
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = C_WIDTH * dpr; canvas.height = C_HEIGHT * dpr;
+        ctx.scale(dpr, dpr);
+    }
+
+    initHighDPI(); window.addEventListener('resize', initHighDPI);
+    updateLabels(); calculatePhysics(); requestAnimationFrame(renderLoop);
+</script>
+</body>
+</html>
