@@ -103,6 +103,10 @@
         .inquiry-box { background: rgba(37, 99, 235, 0.1); border-left: 4px solid var(--primary); padding: 12px 15px; border-radius: 0 6px 6px 0; margin-top: 15px; font-size: 0.9em; }
         .inquiry-box strong { color: var(--primary); }
 
+        .auto-status { display: none; margin: -5px 0 20px; padding: 10px 13px; border-radius: 6px; font-size: 0.9em; border-left: 4px solid var(--primary); background: var(--bg-panel); color: var(--text-main); }
+        .auto-status.visible { display: block; }
+        .auto-status.warning { border-left-color: var(--warning); }
+
         @media (min-width: 768px) {
             .math-line { flex-direction: row; justify-content: space-between; align-items: center; }
             .math-label { margin-bottom: 0; }
@@ -116,17 +120,19 @@
     <div class="header-section">
         <h2>Optical Correction Simulation</h2>
         <div class="header-controls">
-            <button id="autoRefractBtn">Auto-Refract</button>
+            <button id="autoRefractBtn" title="Calculate the correction predicted by this reduced-eye model">Calculate Model Correction</button>
             <button id="themeToggleBtn">🌙 Dark Mode</button>
         </div>
     </div>
+    <p id="autoRefractStatus" class="auto-status" role="status" aria-live="polite"></p>
 
     <details>
         <summary>Simulation Specifications & Theoretical Assumptions</summary>
         <ul>
-            <li><strong>Eye Approximation:</strong> Collapses the cornea, aqueous humor, crystalline lens, and vitreous humor into a single refracting surface with a uniform refractive index (n = 1.336).</li>
-            <li><strong>Paraxial Approximation:</strong> Assumes incoming light rays are close to the optical axis and travel at shallow angles, allowing standard thin-lens vergence equations to hold true.</li>
-            <li><strong>Principal Plane Rendering:</strong> By convention, refraction is visually calculated at flat vertical planes (principal planes) rather than calculating exact curved surface intersection physics via Snell's Law.</li>
+            <li><strong>Reduced-eye approximation:</strong> Represents the eye by one equivalent refracting element followed by a uniform image-space medium with refractive index n' = 1.336. It does not model the individual curved surfaces of the cornea and crystalline lens.</li>
+            <li><strong>Paraxial approximation:</strong> Uses rays close to the optical axis and small angles, so the vergence and equivalent-power relations are applicable.</li>
+            <li><strong>Reference planes:</strong> The dashed markers identify the spectacle-lens plane and corneal reference plane. They are drawing references, not a complete anatomical model or a calculation of thick-lens principal planes.</li>
+            <li><strong>Model limitation:</strong> Accommodation, astigmatism, higher-order aberrations, individual ocular anatomy and clinical refraction procedures are not included. The 0.10 mm near-focus display threshold is a visual guide, not a clinical acceptance criterion. This simulation is for learning, not for determining an actual prescription.</li>
         </ul>
     </details>
 
@@ -138,16 +144,16 @@
     <div class="pedagogy-bar">
         <strong>Visual Tools:</strong>
         <label class="checkbox-group">
-            <input type="checkbox" id="showGrid"> Show Measurement Grid
+            <input type="checkbox" id="showGrid"> Show Measurement Grid (2 mm spacing)
         </label>
         <label class="checkbox-group">
-            <input type="checkbox" id="showPlanes"> Show Principal Planes
+            <input type="checkbox" id="showPlanes"> Show Reference Planes
         </label>
     </div>
 
     <div class="controls">
         <div class="control-group">
-            <label>Eye Optical Power: <span id="eyePowerVal" class="value-display">60.0</span> D</label>
+            <label>Equivalent Eye Power: <span id="eyePowerVal" class="value-display">60.0</span> D</label>
             <input type="range" id="eyePower" min="50" max="70" step="0.5" value="60">
         </div>
         <div class="control-group">
@@ -169,8 +175,8 @@
             <h3>Analytical Breakdown</h3>
             <div class="math-line">
                 <div class="math-label">
-                    Effective Power at Cornea (V<sub>c</sub>)<br>
-                    <small><em>V<sub>c</sub> = P / (1 - d·P)</em></small>
+                    Vergence at Corneal Plane (V<sub>c</sub>)<br>
+                    <small><em>V<sub>c</sub> = P / (1 - d·P)</em><br> P = spectacle-lens power (D); d in metres</small>
                 </div>
                 <span id="math-peff" class="math-val">0.00 D</span>
             </div>
@@ -183,13 +189,13 @@
             </div>
             <div class="math-line">
                 <div class="math-label">
-                    Focal Length<br>
-                    <small><em>f = (n / V<sub>total</sub>) × 1000</em></small>
+                    Image-Space Focal Distance<br>
+                    <small><em>f' = (n' / V<sub>total</sub>) × 1000</em></small>
                 </div>
                 <span id="math-f" class="math-val">22.27 mm</span>
             </div>
             <div class="math-line" style="margin-top: 10px; padding-top: 15px; border-top: 2px solid var(--border);">
-                <div class="math-label" style="font-weight: 600; color: var(--text-main);">Retinal Focal Shift</div>
+                <div class="math-label" style="font-weight: 600; color: var(--text-main);">Retinal Focal Shift<br><small><em>Δ = f' − L</em></small></div>
                 <span id="math-shift" class="math-val" style="font-size: 1.15em;">0.00 mm</span>
             </div>
         </div>
@@ -204,7 +210,7 @@
 
             <div class="inquiry-box">
                 <strong>2. Correcting Myopia:</strong> <br>
-                Reset the lens to 0.00 D. <em>If you increase the eye's Axial Length to 24mm, what mathematical sign (+ or -) must the corrective lens have to push the focal point back onto the retina? Try to guess the answer, test it out with the slider, and verify using the Auto-Refract tool.</em>
+                Reset the lens to 0.00 D. <em>If you increase the eye's Axial Length to 24mm, what mathematical sign (+ or -) must the corrective lens have to push the focal point back onto the retina? Try to guess the answer, test it out with the slider, and verify using the Calculate Model Correction tool.</em>
             </div>
         </div>
     </div>
@@ -280,13 +286,39 @@
     const SCALE = 12;
     const CORNEA_X = 400;
 
+    const autoRefractStatus = document.getElementById('autoRefractStatus');
+
+    function formatPower(power) {
+        return `${power > 0 ? '+' : ''}${power.toFixed(2)} D`;
+    }
+
     document.getElementById('autoRefractBtn').addEventListener('click', () => {
         const Pe = parseFloat(inputs.eyePower.value);
         const L_mm = parseFloat(inputs.axialLength.value);
         const d_mm = parseFloat(inputs.vertexDist.value);
+
+        // Required vergence at the corneal reference plane for the image to
+        // focus at the retina in this reduced-eye model.
         const V_cornea_req = (N_EYE / (L_mm / 1000)) - Pe;
+
+        // Invert Vc = P / (1 - dP) to obtain spectacle-plane lens power P.
         const P_req = V_cornea_req / (1 + (V_cornea_req * (d_mm / 1000)));
-        inputs.lensPower.value = Math.max(-15, Math.min(15, Math.round(P_req * 4) / 4));
+        const roundedPReq = Math.round(P_req * 4) / 4;
+        const minPower = parseFloat(inputs.lensPower.min);
+        const maxPower = parseFloat(inputs.lensPower.max);
+        const appliedPower = Math.max(minPower, Math.min(maxPower, roundedPReq));
+
+        inputs.lensPower.value = appliedPower;
+
+        autoRefractStatus.classList.add('visible');
+        if (P_req < minPower || P_req > maxPower) {
+            autoRefractStatus.classList.add('warning');
+            autoRefractStatus.textContent = `Required model correction: ${formatPower(P_req)}. The available control range is ${formatPower(minPower)} to ${formatPower(maxPower)}. The slider has been set to ${formatPower(appliedPower)}; the model is not fully corrected at this setting.`;
+        } else {
+            autoRefractStatus.classList.remove('warning');
+            autoRefractStatus.textContent = `Model estimate: ${formatPower(P_req)}. The slider is set to ${formatPower(appliedPower)} (nearest 0.25 D control step).`;
+        }
+
         draw();
     });
 
@@ -296,7 +328,8 @@
         ctx.strokeStyle = style.getPropertyValue('--grid-line').trim();
         ctx.lineWidth = 1;
 
-        // Draw vertical lines every 10mm (120px) starting from Cornea
+        // Grid spacing is 2 mm: SCALE is 12 px/mm, so each interval is 24 px.
+        // The same 2 mm spacing is used horizontally and vertically.
         for (let i = 0; i < CANVAS_WIDTH; i += SCALE * 2) {
             ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, CANVAS_HEIGHT); ctx.stroke();
         }
@@ -305,22 +338,22 @@
         }
     }
 
-    function drawPrincipalPlanes(lensX) {
+    function drawReferencePlanes(lensX) {
         if (!toggles.planes.checked) return;
         ctx.strokeStyle = isDarkMode ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
         ctx.setLineDash([4, 4]);
         ctx.lineWidth = 1.5;
 
-        // Cornea Plane
+        // Corneal reference plane
         ctx.beginPath(); ctx.moveTo(CORNEA_X, OPTICAL_AXIS_Y - 120); ctx.lineTo(CORNEA_X, OPTICAL_AXIS_Y + 120); ctx.stroke();
         ctx.fillStyle = ctx.strokeStyle;
         ctx.font = '12px sans-serif';
         ctx.fillText("Corneal Plane", CORNEA_X - 35, OPTICAL_AXIS_Y + 135);
 
-        // Lens Plane
+        // Spectacle-lens plane
         if (parseFloat(inputs.lensPower.value) !== 0) {
             ctx.beginPath(); ctx.moveTo(lensX, OPTICAL_AXIS_Y - 90); ctx.lineTo(lensX, OPTICAL_AXIS_Y + 90); ctx.stroke();
-            ctx.fillText("Lens Plane", lensX - 30, OPTICAL_AXIS_Y + 105);
+            ctx.fillText("Spectacle Lens", lensX - 43, OPTICAL_AXIS_Y + 105);
         }
         ctx.setLineDash([]);
     }
@@ -389,7 +422,7 @@
         const retinaX = CORNEA_X + (L_mm * SCALE);
         const focalX = CORNEA_X + (f_mm * SCALE);
 
-        drawPrincipalPlanes(lensX);
+        drawReferencePlanes(lensX);
 
         // Optical Axis
         ctx.strokeStyle = isDarkMode ? '#475569' : '#94a3b8';
@@ -435,13 +468,17 @@
 
         // Status
         ctx.font = '600 16px "Lexend", sans-serif';
-        if (absShift < 0.01) { ctx.fillStyle = cSuccess; ctx.fillText("Focus: Emmetropia (Perfect)", 20, 35); }
-        else if (absShift <= 0.10) { ctx.fillStyle = cWarning; ctx.fillText("Focus: Clinically Acceptable", 20, 35); }
+        if (absShift < 0.01) { ctx.fillStyle = cSuccess; ctx.fillText("Focus: Model-matched (emmetropic)", 20, 35); }
+        else if (absShift <= 0.10) { ctx.fillStyle = cWarning; ctx.fillText("Focus: Near retinal plane (0.10 mm model threshold)", 20, 35); }
         else if (shift < 0) { ctx.fillStyle = cDanger; ctx.fillText("Focus: Myopic Error", 20, 35); }
         else { ctx.fillStyle = cDanger; ctx.fillText("Focus: Hyperopic Error", 20, 35); }
     }
 
-    Object.values(inputs).forEach(i => i.addEventListener('input', draw));
+    Object.values(inputs).forEach(i => i.addEventListener('input', () => {
+        autoRefractStatus.textContent = '';
+        autoRefractStatus.classList.remove('visible', 'warning');
+        draw();
+    }));
     Object.values(toggles).forEach(t => t.addEventListener('change', draw));
     draw();
 </script>
