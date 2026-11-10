@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acoustics: WaveLab & ANC</title>
+    <title>Acoustics: Wave, Fourier & Melody Laboratory</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,7 +72,7 @@
         .input-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
         .input-label { font-size: 0.8em; color: var(--text-muted); font-family: 'Space Mono', monospace; }
         .num-wrapper { display: flex; align-items: center; gap: 6px; }
-        .num-input { background: #000; border: 1px solid var(--border-dim); border-radius: 3px; padding: 4px 6px; font-family: 'Space Mono', monospace; font-size: 1em; text-align: center; outline: none; font-weight: bold; width: 75px; transition: border-color 0.2s;}
+        .num-input { background: #000; color: var(--text-main); color-scheme: dark; border: 1px solid var(--border-dim); border-radius: 3px; padding: 4px 6px; font-family: 'Space Mono', monospace; font-size: 1em; text-align: center; outline: none; font-weight: bold; width: 75px; transition: border-color 0.2s;}
         .num-input:focus { border-color: var(--accent-primary); }
         .num-unit { color: var(--text-muted); font-family: 'Space Mono', monospace; font-size: 0.9em; width: 25px; }
 
@@ -107,18 +107,100 @@
         .artist-block { background: rgba(0, 240, 255, 0.05); border: 1px solid var(--border-main); padding: 15px; margin-bottom: 15px; border-radius: 4px; }
         .artist-block a { color: var(--stage1); text-decoration: none; transition: 0.2s; }
         .artist-block a:hover { color: #fff; text-decoration: underline; }
+
+        /* Fourier / digital-audio modules added without changing the original WaveLab layout */
+        .tabs { gap: 4px; }
+        .tab-btn { flex: 1 1 175px; min-width: 145px; padding: 11px 12px; font-size: 0.82em; }
+        .fourier-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
+        @media (min-width: 950px) { .fourier-grid.two-col { grid-template-columns: 1.5fr 1fr; } .fourier-grid.equal { grid-template-columns: 1fr 1fr; } }
+        .fourier-canvas-box { background: var(--bg-inset); border: 1px solid var(--border-dim); padding: 15px; min-width: 0; }
+        .fourier-canvas-box canvas { aspect-ratio: 1000 / 350; }
+        .fourier-canvas-box .short-canvas { aspect-ratio: 2 / 1; }
+        .fourier-canvas-box .wide-canvas { aspect-ratio: 5 / 1; }
+        .fourier-axis-guide { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; border-top: 1px dashed var(--border-dim); padding-top: 8px; margin-top: 8px; color: var(--text-muted); font: 0.72em 'Space Mono', monospace; }
+        .fourier-readout { background: #000; border: 1px solid var(--border-dim); padding: 12px 15px; color: var(--text-main); font: 0.95em 'Space Mono', monospace; text-align: center; overflow-x: auto; margin-bottom: 18px; }
+        .fourier-preset-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+        .fourier-preset-row .action-btn { width: auto; padding: 9px 13px; font-size: 0.78em; }
+        .fourier-harmonics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .fourier-harmonic-control { background: var(--bg-inset); border: 1px solid var(--border-dim); border-top-width: 3px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; min-width: 0; }
+        .fourier-harmonic-control label { text-align: center; margin-bottom: 8px; font: 700 0.8em 'Space Mono', monospace; }
+        .fourier-harmonic-control input[type=range][orient=vertical] { appearance: none; width: 8px; height: 105px; margin: 6px 0 10px; background: rgba(255,255,255,0.12); border-radius: 4px; writing-mode: vertical-lr; direction: rtl; }
+        .fourier-harmonic-control input[type=range][orient=vertical]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 8px; background: #fff; border-radius: 2px; }
+        .fourier-harmonic-control input[type=range][orient=vertical]::-moz-range-thumb { width: 22px; height: 8px; background: #fff; border: 0; border-radius: 2px; }
+        .fourier-harmonic-control .num-input { width: 75px; font-size: 0.82em; }
+        .fourier-master-controls { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 18px; background: var(--bg-inset); border: 1px solid var(--border-dim); padding: 17px; margin-bottom: 20px; }
+        .fourier-master-controls .action-btn { width: auto; }
+        .fourier-number-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; font: 0.82em 'Space Mono', monospace; }
+        .fourier-number-row input[type=range] { width: 100%; }
+        .fourier-pitch-ui { background: rgba(0,240,255,0.05); border: 1px solid var(--accent-primary); padding: 9px 12px; min-width: 150px; text-align: right; }
+        .fourier-pitch-ui .freq { color: var(--accent-primary); font: 700 1.25em 'Space Mono', monospace; }
+        .fourier-pitch-ui .desc { color: var(--text-muted); font: 0.65em 'Space Mono', monospace; text-transform: uppercase; }
+        .fourier-warning { background: rgba(255,204,0,0.08); border-left: 3px solid var(--accent-warning); color: var(--text-main); padding: 10px 13px; font-size: 0.85em; margin: 10px 0; }
+        .fourier-theory { background: var(--bg-inset); border: 1px solid var(--border-dim); padding: 17px; margin-top: 18px; }
+        .fourier-theory p { color: var(--text-muted); font-size: 0.9em; margin: 8px 0 0; }
+        .fourier-theory strong { color: var(--text-main); }
+        .fourier-file-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--bg-inset); border: 1px solid var(--border-dim); padding: 15px; margin-bottom: 16px; }
+        .fourier-file-row input[type=file] { color: var(--text-muted); max-width: 100%; }
+        .fourier-file-row audio { flex: 1; min-width: 220px; }
+        .fourier-spectrum-legend { display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; color:var(--text-muted); font:0.72em 'Space Mono',monospace; margin-top:8px; }
+        @media (max-width: 600px) { .fourier-master-controls { align-items: stretch; } .fourier-master-controls > * { width: 100%; } .fourier-master-controls .action-btn { width: 100%; } }
+
+
+        /* Digital sampling: robust, visible canvas geometry */
+        #ds_samplerCanvas { display:block; width:100%; height:auto; min-height:250px; aspect-ratio:1000 / 360 !important; }
+        .fourier-sampler-legend { display:flex; flex-wrap:wrap; gap:12px 20px; margin-top:9px; color:var(--text-muted); font:0.72em 'Space Mono',monospace; }
+        .fourier-sampler-legend span { display:inline-flex; align-items:center; gap:6px; }
+        .fourier-sampler-legend i { display:inline-block; width:16px; height:3px; border-radius:2px; }
+        .fourier-axis-guide { align-items:center; }
+
+        /* Melody Studio: namespaced styles to avoid disturbing the original WaveLab */
+        .ml-progression { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; margin:4px 0 18px; padding:12px; color:var(--text-muted); font:0.75em 'Space Mono',monospace; border-bottom:1px dashed var(--border-dim); text-align:center; }
+        .ml-progression .arrow { color:var(--accent-primary); }
+        .ml-panel { background:var(--bg-inset); border:1px solid var(--border-dim); padding:18px; margin-bottom:18px; }
+        .ml-panel h3 { margin-bottom:12px; }
+        .ml-theory { background:var(--bg-panel); border-left:3px solid var(--accent-primary); padding:12px 15px; margin-bottom:14px; }
+        .ml-theory p { color:var(--text-muted); font-size:0.9em; margin:7px 0 0; }
+        .ml-note-strip { display:flex; flex-wrap:wrap; gap:7px; min-height:76px; padding:13px; background:#000; border:1px solid var(--border-dim); margin-bottom:12px; }
+        .ml-note-chip { min-width:48px; height:54px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:3px; padding:4px 7px; border:1px solid var(--border-dim); background:var(--bg-inset); color:var(--text-muted); font:700 0.75em 'Space Mono',monospace; transition:background .1s,border-color .1s; }
+        .ml-note-chip.active { background:rgba(0,240,255,.16); border-color:var(--accent-primary); color:#fff; box-shadow:0 0 10px rgba(0,240,255,.2); }
+        .ml-note-chip small { color:var(--text-muted); font-size:.72em; font-weight:400; }
+        .ml-current-note { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; padding:12px 14px; background:rgba(0,240,255,.045); border:1px dashed var(--accent-primary); }
+        .ml-current-note strong { color:var(--accent-primary); font:700 1.1em 'Space Mono',monospace; }
+        .ml-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:12px; background:var(--bg-panel); border:1px solid var(--border-dim); }
+        .ml-field { display:flex; align-items:center; flex-wrap:wrap; gap:7px; color:var(--text-muted); font:0.78em 'Space Mono',monospace; }
+        .ml-field select,.ml-field input { width:auto; min-width:68px; margin:0; }
+        .ml-field select { min-width:120px; }
+        .ml-sequence { display:flex; flex-wrap:wrap; align-items:center; gap:8px; min-height:86px; padding:14px; background:#000; border:1px solid var(--border-dim); margin:12px 0; }
+        .ml-builder-note { min-width:64px; background:var(--bg-inset); border:1px solid var(--border-dim); color:var(--text-main); font:0.78em 'Space Mono',monospace; text-align:center; }
+        .ml-note-actions { display:flex; justify-content:space-between; gap:4px; padding:3px 5px; background:#000; border-bottom:1px solid var(--border-dim); }
+        .ml-note-actions button { width:auto; padding:1px 5px; background:transparent; color:var(--text-muted); font:0.8em 'Space Mono',monospace; }
+        .ml-note-actions button:hover { color:#fff; }
+        .ml-builder-note .ml-note-name { display:block; padding:7px 5px 2px; font-weight:700; }
+        .ml-builder-note small { display:block; padding-bottom:7px; color:var(--text-muted); font-size:.72em; }
+        .ml-bar { color:var(--accent-warning); font-size:1.5em; padding:0 5px; }
+        .ml-piano-wrap { margin-top:14px; padding:14px; background:#000; border:1px solid var(--border-dim); }
+        .ml-piano { position:relative; display:flex; height:178px; overflow-x:auto; overflow-y:hidden; padding-bottom:4px; user-select:none; touch-action:pan-x; }
+        .ml-white-key { position:relative; flex:0 0 48px; height:164px; display:flex; align-items:flex-end; justify-content:center; padding:0 0 9px; background:#f1f5f9; color:#111827; border:1px solid #64748b; border-radius:0 0 4px 4px; cursor:pointer; font:700 .65em 'Space Mono',monospace; }
+        .ml-white-key.active { background:#cbd5e1; box-shadow:inset 0 -7px 0 var(--accent-primary); }
+        .ml-black-key { position:absolute; z-index:3; top:0; width:30px; height:100px; transform:translateX(-15px); display:flex; align-items:flex-end; justify-content:center; padding-bottom:7px; background:#17191f; color:#e2e8f0; border:1px solid #475569; border-top:2px solid #64748b; border-radius:0 0 4px 4px; cursor:pointer; font:700 .57em 'Space Mono',monospace; }
+        .ml-black-key.active { background:#334155; box-shadow:inset 0 -6px 0 var(--accent-primary); }
+        .ml-status { color:var(--text-muted); font:0.72em 'Space Mono',monospace; }
+        .ml-recording { display:none; color:var(--accent-danger); font:700 .8em 'Space Mono',monospace; }
+        .ml-help { color:var(--text-muted); font-size:.82em; margin-top:9px; }
+        .ml-progress { width:100%; height:4px; accent-color:var(--accent-primary); }
+        @media (max-width:600px) { .ml-white-key { flex-basis:43px; } .ml-black-key { width:27px; transform:translateX(-13.5px); } .ml-piano { height:170px; } }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header-section">
-        <h2>Acoustics: WaveLab & ANC Bench</h2>
+        <h2>Acoustics: Wave, Fourier & Melody Laboratory</h2>
         <a href="index.html" class="back-link">&larr; Return to Dashboard</a>
     </div>
 
     <!-- CANVAS IS UNIVERSAL -->
-    <div class="canvas-box">
+    <div class="canvas-box" id="universalWaveBox">
         <div class="canvas-label">
             <span id="canvasTitle">> THEORETICAL SUPERPOSITION (SINE WAVES)</span>
             <span style="color: var(--stage3);" id="interferenceState">Constructive Interference</span>
@@ -128,9 +210,13 @@
 
     <!-- TAB NAVIGATION -->
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('theory')">1. Theoretical Mechanics (Tones)</button>
-        <button class="tab-btn" onclick="switchTab('music')">2. Practical ANC (Audio File)</button>
-        <button class="tab-btn" onclick="switchTab('mic')">3. Live Microphone ANC</button>
+        <button class="tab-btn active" onclick="switchTab('theory', this)">1. Superposition & Beats</button>
+        <button class="tab-btn" onclick="switchTab('fourier', this)">2. Fourier Synthesis</button>
+        <button class="tab-btn" onclick="switchTab('analyzer', this)">3. Audio Analyzer</button>
+        <button class="tab-btn" onclick="switchTab('sampler', this)">4. Digital Sampling</button>
+        <button class="tab-btn" onclick="switchTab('music', this)">5. Digital Cancellation</button>
+        <button class="tab-btn" onclick="switchTab('mic', this)">6. Microphone Loopback</button>
+        <button class="tab-btn" onclick="switchTab('melody', this)" style="color:var(--accent-success);">7. Melody Studio</button>
     </div>
 
     <!-- TAB 1: THEORY (TONES) -->
@@ -198,7 +284,7 @@
             <div class="control-group" style="justify-content: center; align-items: center; border-top-color: var(--border-main);">
                 <div class="warning-box" style="width: 100%; box-sizing: border-box;">
                     <strong style="color: var(--accent-danger); font-family: 'Space Mono', monospace;">⚠️ VOLUME WARNING:</strong>
-                    Remove headphones before sweeping frequencies above 10 kHz to prevent hearing damage.
+                    Start with a low volume and increase it gradually. Loud tones at any frequency can harm hearing; stop if the sound is uncomfortable.
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 10px;">
@@ -208,7 +294,7 @@
                 </div>
 
                 <div style="font-size: 0.75em; color: var(--text-muted); text-align: center;">
-                    <em>Drag Phase to 180&deg; for cancellation. Click <strong>DJ WOBBLE</strong> to simulate an electronic LFO sub-bass using wave beating.</em>
+                    <em>For sine, triangle and square waves, 180&deg; gives destructive interference when amplitudes and frequencies match. A sawtooth is not fully cancelled by a half-period shift because it contains even harmonics. Click <strong>DJ WOBBLE</strong> to explore beating.</em>
                 </div>
             </div>
         </div>
@@ -220,7 +306,7 @@
                 <div class="math-val" style="text-align: center; margin: 15px 0; font-size: 1.1em; color: var(--text-main);">
                     y(t) = y<sub>1</sub>(t) + y<sub>2</sub>(t)
                 </div>
-                <p style="font-size: 0.9em; color: var(--text-muted);">For two identical waves with a phase difference &phi;:</p>
+                <p style="font-size: 0.9em; color: var(--text-muted);">For two equal-amplitude sine waves of the same frequency with a phase difference &phi;:</p>
                 <div style="font-family: 'Space Mono', monospace; font-size: 0.85em; color: var(--stage1); margin-bottom: 5px;">y<sub>1</sub> = A&middot;sin(&omega;t)</div>
                 <div style="font-family: 'Space Mono', monospace; font-size: 0.85em; color: var(--stage2); margin-bottom: 15px;">y<sub>2</sub> = A&middot;sin(&omega;t + &phi;)</div>
 
@@ -236,21 +322,231 @@
                 <h3>Timbre & Harmonics (Fourier Theory)</h3>
                 <div class="theory-block" style="border-color: var(--stage1);">
                     <strong style="color: var(--stage1);">> Why do shapes sound different?</strong>
-                    <p>French mathematician Joseph Fourier proved that <em>every</em> complex wave is just a sum of pure sine waves. Changing the waveform shape changes the <em>Harmonics</em> (overtones) layered on top of the base frequency:</p>
+                    <p>Fourier series represent periodic waveforms as sums of sinusoidal components at a fundamental frequency and its harmonics. The ideal waveforms below have these characteristic harmonic patterns:</p>
                     <ul style="margin-bottom: 0;">
                         <li><strong>Sine:</strong> Only the fundamental frequency. Clean and smooth.</li>
-                        <li><strong>Triangle:</strong> Odd harmonics that drop rapidly. Warm.</li>
-                        <li><strong>Square:</strong> Odd harmonics dropping slowly. Reedy "8-bit" sound.</li>
-                        <li><strong>Sawtooth:</strong> ALL harmonics. Extremely bright and buzzy.</li>
+                        <li><strong>Triangle:</strong> Odd harmonics, with amplitudes decreasing approximately as 1/n².</li>
+                        <li><strong>Square:</strong> Odd harmonics, with amplitudes decreasing approximately as 1/n.</li>
+                        <li><strong>Sawtooth:</strong> All integer harmonics, with amplitudes decreasing approximately as 1/n.</li>
                     </ul>
                 </div>
                 <div class="theory-block" style="border-color: #a855f7;">
                     <strong style="color: #a855f7;">> The DJ Bass Wobble</strong>
-                    <p style="margin-bottom: 0;">Click the <strong>DJ WOBBLE</strong> button. This switches the DSP to a rich <em>Sawtooth wave</em> at a low 55 Hz sub-bass, and offsets the anti-wave by +3.0 Hz. Because the waves oscillate at different speeds, they rapidly drift in and out of phase, creating the classic throbbing "wub-wub" acoustic beat heavily utilized in electronic music.</p>
+                    <p style="margin-bottom: 0;">Click the <strong>DJ WOBBLE</strong> button. This selects a 55 Hz sawtooth source and a second waveform 3 Hz higher. Their relative phase continually changes, producing a 3 Hz beat-like fluctuation in the combined signal. This is a simplified illustration of beating, not a complete model of an electronic music synthesizer.</p>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- TAB 2: FOURIER SYNTHESIS -->
+    <div id="fourierTab" class="tab-content">
+        <div class="setup-tracker">Goal: Build a complex periodic waveform by adding sine-wave harmonics, then compare its time-domain shape with its frequency spectrum.</div>
+        <div class="fourier-grid two-col">
+            <div class="fourier-canvas-box">
+                <div class="canvas-label"><span style="color:var(--accent-primary)">1. TIME DOMAIN — RESULTANT WAVEFORM</span></div>
+                <canvas id="fs_timeCanvas" style="aspect-ratio:1000/350;"></canvas>
+                <div class="fourier-axis-guide"><span>X: Time / phase &rarr;</span><span>Y: Relative amplitude &uarr;</span></div>
+            </div>
+            <div class="fourier-canvas-box">
+                <div class="canvas-label"><span style="color:var(--accent-warning)">2. FREQUENCY DOMAIN — HARMONIC AMPLITUDES</span></div>
+                <canvas id="fs_freqCanvas" style="aspect-ratio:700/350;"></canvas>
+                <div class="fourier-axis-guide"><span>X: Harmonic number &rarr;</span><span>Bar height: |coefficient|</span></div>
+            </div>
+        </div>
+        <div class="fourier-readout" id="fs_equationDisplay">x(t) = sin(&omega;t)</div>
+        <div class="fourier-preset-row">
+            <button class="action-btn secondary" data-fourier-preset="sine">SINE</button>
+            <button class="action-btn secondary" data-fourier-preset="square">SQUARE</button>
+            <button class="action-btn secondary" data-fourier-preset="triangle">TRIANGLE</button>
+            <button class="action-btn secondary" data-fourier-preset="sawtooth">SAWTOOTH</button>
+            <button class="action-btn secondary" data-fourier-preset="clear" style="color:var(--accent-danger)">CLEAR</button>
+        </div>
+        <div class="fourier-harmonics-grid" id="fs_harmonicsContainer"></div>
+        <div class="fourier-master-controls">
+            <button id="fs_masterPlayBtn" class="action-btn">&#9654; PLAY SYNTHESIS</button>
+            <div style="flex:1;min-width:230px;">
+                <div class="fourier-number-row"><span style="color:var(--text-muted)">Fundamental frequency (f<sub>0</sub>)</span><span><input type="number" id="fs_f0Input" class="num-input" value="220" min="55" max="880" step="1" style="width:90px;"> Hz</span></div>
+                <input type="range" id="fs_f0Slider" min="55" max="880" step="1" value="220">
+            </div>
+        </div>
+        <div class="fourier-theory">
+            <h3>How Fourier Synthesis Works</h3>
+            <p><strong>Fundamental:</strong> The first component has frequency <em>f</em><sub>0</sub>. The higher components are harmonics at integer multiples 2<em>f</em><sub>0</sub>, 3<em>f</em><sub>0</sub>, and so on.</p>
+            <p><strong>Waveform shape:</strong> Changing the relative amplitudes and signs (phases) of the harmonic components changes the resultant waveform. The spectrum bars show coefficient magnitudes; the signed number boxes also let you change phase by 180&deg; through a negative coefficient.</p>
+            <p><strong>Model limitation:</strong> This lab displays nine harmonics. Ideal square, triangle and sawtooth waves require infinitely many harmonics, so the presets are finite approximations.</p>
+        </div>
+    </div>
+
+    <!-- TAB 3: AUDIO ANALYZER -->
+    <div id="analyzerTab" class="tab-content">
+        <div class="setup-tracker">Goal: Inspect a sound in the time domain, frequency domain and spectrogram. Upload an audio file and press Play.</div>
+        <div class="fourier-file-row">
+            <label for="fa_audioUpload" class="action-btn secondary" style="width:auto;cursor:pointer;">📁 CHOOSE AUDIO FILE</label>
+            <input type="file" id="fa_audioUpload" accept="audio/*">
+            <audio id="fa_audioElement" controls></audio>
+        </div>
+        <div class="fourier-grid equal">
+            <div class="fourier-canvas-box">
+                <div class="canvas-label"><span style="color:var(--accent-primary)">1. TIME-DOMAIN WAVEFORM</span></div>
+                <canvas id="fa_waveCanvas" class="short-canvas"></canvas>
+                <div class="fourier-axis-guide"><span>X: Time &rarr;</span><span>Y: Amplitude &uarr;</span></div>
+            </div>
+            <div class="fourier-canvas-box">
+                <div class="canvas-label">
+                    <span style="color:var(--accent-warning)">2. FREQUENCY SPECTRUM (FFT)</span>
+                    <div class="fourier-pitch-ui" id="fa_pitchUI"><div class="freq" id="fa_livePitchReadout">STANDBY</div><div class="desc">Estimated dominant pitch</div></div>
+                </div>
+                <canvas id="fa_fftCanvas" class="short-canvas"></canvas>
+                <div class="fourier-axis-guide"><span>0 Hz</span><span>Frequency &rarr;</span><span>Nyquist frequency</span></div>
+            </div>
+            <div class="fourier-canvas-box" style="grid-column:1/-1;">
+                <div class="canvas-label"><span style="color:#f97316">3. SPECTROGRAM — FREQUENCY CONTENT OVER TIME</span></div>
+                <canvas id="fa_spectrogramCanvas" class="wide-canvas"></canvas>
+                <div class="fourier-axis-guide"><span>Older &larr; Time &rarr; Newer</span><span>Log frequency · 40 Hz to Nyquist</span><span>Colour: relative level</span></div>
+            </div>
+        </div>
+        <div class="fourier-theory">
+            <h3>How to Read These Displays</h3>
+            <p><strong>Time domain:</strong> Shows how the signal amplitude changes with time.</p>
+            <p><strong>Frequency spectrum:</strong> The Fast Fourier Transform (FFT) estimates the frequency components present in the selected audio. The displayed bars represent relative spectral level, not a calibrated sound-pressure measurement.</p>
+            <p><strong>Spectrogram:</strong> Repeated FFT measurements are plotted over time. Horizontal position represents time, vertical position represents frequency, and colour represents relative signal level.</p>
+            <p><strong>Pitch estimate:</strong> The readout uses a simple autocorrelation estimate. It is most reliable for clear, approximately periodic sounds; complex or noisy audio may produce an unstable estimate.</p>
+        </div>
+    </div>
+
+    <!-- TAB 4: DIGITAL AUDIO SAMPLER -->
+    <div id="samplerTab" class="tab-content">
+        <div class="setup-tracker">Goal: Explore how sample rate and bit depth affect a digital representation of a continuous tone.</div>
+        <div class="fourier-canvas-box" style="margin-bottom:18px;">
+            <div class="canvas-label"><span>CONTINUOUS INPUT → DISCRETE SAMPLES → ZERO-ORDER-HOLD OUTPUT</span><span id="ds_samplerSummary" style="color:var(--accent-primary);">440 Hz · 44.1 kHz · 16-bit</span></div>
+            <canvas id="ds_samplerCanvas" width="1000" height="360" style="aspect-ratio:1000/360;"></canvas>
+            <div class="fourier-sampler-legend">
+                <span><i style="background:#e2e8f0;"></i>Continuous input</span>
+                <span><i style="background:#f59e0b;"></i>Quantised sample values</span>
+                <span><i style="background:#22d3ee;"></i>Sample-and-hold output</span>
+                <span><i style="background:#ef4444;"></i>Playback cursor</span>
+            </div>
+            <div class="fourier-axis-guide"><span>X: Time across four input cycles &rarr;</span><span>Y: Normalised amplitude &rarr; +1 to −1</span></div>
+        </div>
+        <div class="fourier-master-controls" style="align-items:flex-start;">
+            <div style="flex:1;min-width:200px;">
+                <button id="ds_samplerPlayBtn" class="action-btn" style="width:100%;">&#9654; PLAY SAMPLED TONE</button>
+                <div class="fourier-number-row" style="margin-top:14px;"><span>Input tone frequency</span><span><input type="number" id="ds_samplerFreqInput" class="num-input" value="440" min="100" max="2000" step="1" style="width:86px;"> Hz</span></div>
+                <input type="range" id="ds_samplerFreq" min="100" max="2000" step="1" value="440">
+            </div>
+            <div style="flex:1;min-width:220px;background:#000;border:1px solid var(--border-dim);padding:14px;">
+                <div class="fourier-number-row"><strong>SAMPLE RATE (f<sub>s</sub>)</strong><span><input type="number" id="ds_srInput" class="num-input" value="44100" min="200" max="44100" step="100" style="width:96px;color:var(--accent-primary);"> Hz</span></div>
+                <input type="range" id="ds_srSlider" min="200" max="44100" step="100" value="44100">
+            </div>
+            <div style="flex:1;min-width:220px;background:#000;border:1px solid var(--border-dim);padding:14px;">
+                <div class="fourier-number-row"><strong>BIT DEPTH</strong><span><input type="number" id="ds_bitInput" class="num-input" value="16" min="2" max="16" step="1" style="width:70px;color:var(--accent-warning);"> bits</span></div>
+                <input type="range" id="ds_bitSlider" min="2" max="16" step="1" value="16">
+            </div>
+        </div>
+        <div id="ds_samplerWarning" class="fourier-warning" style="display:none;"></div>
+        <div class="fourier-theory">
+            <h3>Sampling and Quantisation</h3>
+            <p><strong>Sample rate:</strong> The number of samples taken per second. For a band-limited signal, the sampling rate must be greater than twice the highest frequency of interest to avoid aliasing (the Nyquist criterion).</p>
+            <p><strong>Bit depth:</strong> Determines the number of possible quantisation levels. This demonstration uses a uniform quantiser over the normalised amplitude range from &minus;1 to +1.</p>
+            <p><strong>Model limitation:</strong> The display and sound use a simple sample-and-hold model without an anti-aliasing filter or reconstruction filter. It is an educational illustration, not a complete audio ADC/DAC chain.</p>
+        </div>
+    </div>
+
+
+
+    <!-- TAB 7: MELODY STUDIO -->
+    <div id="melodyTab" class="tab-content">
+        <div class="setup-tracker" style="border-color:var(--accent-success);color:var(--accent-success);background:rgba(34,197,94,.05);">Goal: Connect frequency to pitch, pitch sequences to melody, and harmonics to timbre.</div>
+
+        <div class="ml-progression">
+            <span>FREQUENCY</span><span class="arrow">→</span><span>PITCH</span><span class="arrow">→</span>
+            <span>SEQUENCE</span><span class="arrow">→</span><span>MELODY</span><span class="arrow">→</span>
+            <span>HARMONICS</span><span class="arrow">→</span><span>TIMBRE</span>
+        </div>
+
+        <div class="ml-panel" style="border-color:var(--accent-primary);">
+            <h3>01. A Melody Is a Sequence of Pitches</h3>
+            <div class="ml-theory" style="border-color:var(--accent-primary);">
+                <p>A melody is a sequence of pitches arranged in time. Play the example and watch each note become active as it sounds. The displayed frequency is the fundamental frequency of the note.</p>
+            </div>
+            <div class="ml-note-strip" id="ml_twinkleVisualizer" aria-label="Twinkle melody note sequence"></div>
+            <div class="ml-current-note">
+                <div><div class="ml-status">CURRENT NOTE</div><strong id="ml_twinkleStatus">STANDBY</strong></div>
+                <button class="action-btn success" id="ml_playTwinkleBtn" style="width:auto;">▶ PLAY TWINKLE · PURE SINE</button>
+            </div>
+        </div>
+
+        <div class="ml-panel" style="border-color:var(--accent-spectrogram);">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+                <h3>02. Melody Builder & Song Presets</h3>
+                <span class="ml-recording" id="ml_recordIndicator">⏺ RECORDING AUDIO…</span>
+            </div>
+            <div class="ml-theory" style="border-color:var(--accent-spectrogram);">
+                <p>Load a short melody preset or build your own sequence. Each note has a pitch and duration. Some presets include a pitch slide. Synth timbres are approximations, not original recordings.</p>
+            </div>
+            <div class="ml-toolbar">
+                <div class="ml-field"><strong style="color:var(--accent-success);">LOAD SONG PRESET</strong>
+                    <select id="ml_songTemplate">
+                        <option value="coffindance">Coffin Dance (Astronomia)</option>
+                        <option value="turnlights">KATO ft. Jon – Turn The Lights Off</option>
+                        <option value="takeonme">a-ha – Take On Me</option>
+                        <option value="axelf">Harold Faltermeyer – Axel F</option>
+                        <option value="finalcountdown">Europe – The Final Countdown</option>
+                        <option value="pirates">Pirates of the Caribbean Theme</option>
+                        <option value="sevennation">The White Stripes – Seven Nation Army</option>
+                        <option value="pinkpanther">The Pink Panther Theme</option>
+                    </select>
+                </div>
+                <button class="action-btn success" id="ml_loadSongBtn" style="width:auto;">LOAD TO SEQUENCER</button>
+            </div>
+            <div class="ml-sequence" id="ml_customMelodyDisplay"><div class="ml-status" style="width:100%;text-align:center;">[ SEQUENCE EMPTY ]</div></div>
+
+            <div class="ml-piano-wrap">
+                <div class="ml-toolbar" style="padding:0 0 12px;border:0;background:transparent;">
+                    <strong style="color:var(--accent-primary);font:700 .82em 'Space Mono',monospace;">KEYBOARD · C2–C6</strong>
+                    <span style="flex:1;"></span>
+                    <span class="ml-status" id="ml_midiStatus">MIDI: CHECKING…</span>
+                    <span class="ml-status">SCROLL · CLICK A KEY TO PREVIEW + ADD</span>
+                </div>
+                <div class="ml-piano" id="ml_pianoKeyboard" aria-label="Piano keyboard for melody entry"></div>
+                <div class="ml-help">Current note duration: <strong id="ml_pianoDurReadout">1/8</strong></div>
+            </div>
+
+            <div class="ml-toolbar" style="margin-top:12px;">
+                <div class="ml-field"><strong>NOTE</strong><select id="ml_bNote"></select></div>
+                <div class="ml-field"><strong>DURATION</strong>
+                    <select id="ml_bDur"><option value="1">1/16</option><option value="2" selected>1/8</option><option value="4">1/4</option><option value="8">1/2</option></select>
+                </div>
+                <button class="action-btn secondary" id="ml_addNoteBtn" style="width:auto;">+ NOTE</button>
+                <button class="action-btn secondary" id="ml_addBarBtn" style="width:auto;">+ BAR LINE |</button>
+                <button class="action-btn secondary" id="ml_duplicateBtn" style="width:auto;">⧉ DUPLICATE LINE</button>
+                <button class="action-btn secondary" id="ml_clearBtn" style="width:auto;color:var(--accent-danger);">CLEAR SEQUENCE</button>
+            </div>
+
+            <div class="ml-toolbar" style="margin-top:12px;">
+                <div class="ml-field"><strong>TIMBRE</strong>
+                    <select id="ml_customTimbre">
+                        <option value="sine">Sine</option><option value="square">Square</option><option value="triangle">Triangle</option><option value="sawtooth">Sawtooth</option>
+                        <option value="80s">80s Synth</option><option value="synth_brass">Synth Brass</option><option value="soft_lead">Soft Lead</option><option value="arcade" selected>Arcade 8-Bit</option><option value="bell_pluck">Bell Pluck</option><option value="octave_guitar">Octave-Drive Guitar (approx.)</option>
+                    </select>
+                </div>
+                <div class="ml-field"><strong>TEMPO</strong><input type="number" id="ml_customBPM" class="num-input" value="140" min="40" max="300" step="1"> BPM</div>
+                <span style="flex:1;"></span>
+                <button class="action-btn secondary" id="ml_loopBtn" style="width:auto;">🔁 LOOP: OFF</button>
+                <button class="action-btn success" id="ml_playCustomBtn" style="width:auto;">▶ PLAY</button>
+                <button class="action-btn" id="ml_recordBtn" style="width:auto;background:var(--accent-danger);color:#fff;">⏺ RECORD</button>
+            </div>
+            <div class="ml-help">Recording creates a WebM audio file. MIDI keyboard input is optional and depends on browser support and permission.</div>
+        </div>
+
+        <div class="ml-panel">
+            <h3>How Timbre Changes a Sound</h3>
+            <div class="ml-theory" style="margin-bottom:0;">
+                <p><strong>Fundamental:</strong> Sets the note's perceived pitch. <strong>Harmonics:</strong> Add integer multiples of the fundamental and shape the timbre. A sine tone contains only the fundamental; ideal square and triangle waves contain odd harmonics; a sawtooth contains all integer harmonics. These presets use a finite set of nine harmonics, so they are approximations.</p>
+            </div>
+        </div>
+    </div>
+
 
     <!-- TAB 2: PRACTICAL (MUSIC FILE) -->
     <div id="musicTab" class="tab-content">
@@ -283,12 +579,12 @@
             </div>
 
             <div class="control-group" style="border-top-color: var(--accent-danger);">
-                <div class="control-header"><label style="color: var(--accent-danger)">Active Noise Cancellation DSP</label></div>
+                <div class="control-header"><label style="color: var(--accent-danger)">Phase-Inversion Demonstration</label></div>
 
                 <label class="toggle-wrapper" style="color: var(--accent-danger); margin-top: 15px;">
-                    <input type="checkbox" id="invertToggleMusic"> [ ACTIVATE PHASE INVERSION ]
+                    <input type="checkbox" id="invertToggleMusic"> [ ADD INVERTED COPY ]
                 </label>
-                <div style="font-size: 0.75em; color: var(--text-muted); margin-bottom: 25px; line-height: 1.4;"><em>Mathematically mirrors the complex broadband waveform.</em></div>
+                <div style="font-size: 0.75em; color: var(--text-muted); margin-bottom: 25px; line-height: 1.4;"><em>The secondary path is muted when this is off.</em></div>
 
                 <div class="control-header"><label>Anti-Signal Volume</label></div>
                 <input type="range" id="ancVolMusic" min="0" max="1" step="0.01" value="1">
@@ -300,7 +596,7 @@
                     </div>
                 </div>
 
-                <div class="control-header" style="margin-top: 25px;"><label>Hardware Latency Delay</label></div>
+                <div class="control-header" style="margin-top: 25px;"><label>Added Signal Delay</label></div>
                 <input type="range" id="ancDelayMusic" min="0" max="2000" step="10" value="0">
                 <div class="input-row">
                     <span class="input-label">Set Delay:</span>
@@ -309,35 +605,34 @@
                         <span class="num-unit">&mu;s</span>
                     </div>
                 </div>
-                <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 5px; line-height: 1.4; text-align: right;"><em>Simulates processing time.</em></div>
+                <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 5px; line-height: 1.4; text-align: right;"><em>User-set delay in the secondary signal path (0–2 ms).</em></div>
             </div>
         </div>
 
         <div class="info-panel" style="grid-template-columns: 1.3fr 1fr;">
             <div class="explanation-side">
-                <h3>Hardware Limitations</h3>
+                <h3>Idealised Signal-Path Limitations</h3>
                 <div class="theory-block" style="border-color: var(--accent-danger);">
-                    <strong style="color: var(--accent-danger);">> Real-World Music ANC</strong>
-                    <p>Load the ADAMAN track or upload a file and click Play. Check the <strong>Phase Inversion</strong> box to simulate the ANC micro-processor mathematically inverting the wave. The music will go perfectly silent, and the Resultant oscilloscope will flatline.</p>
+                    <strong style="color: var(--accent-danger);">> Idealised Digital Phase Cancellation</strong>
+                    <p>Load the track or upload an audio file and click Play. Enable <strong>Phase Inversion</strong> to add a delayed, inverted copy of the same digital signal to the original. With equal levels and zero added delay, the two copies cancel in this idealised signal path. This demonstrates superposition; it is not a model of a headphone system cancelling sound in a room or at the ear.</p>
                 </div>
                 <div class="theory-block" style="border-color: var(--accent-warning);">
-                    <strong style="color: var(--accent-warning);">> The DSP Latency Problem</strong>
-                    <p>Slide the <strong>Hardware Latency</strong> up slightly. Notice how the sound bleeds back in? The digital processor needs microseconds to calculate the inversion. For high frequencies (short wavelengths), a tiny delay means the anti-noise arrives too late, accidentally causing <em>constructive</em> interference. This is why ANC struggles with sudden, high-pitched noises but easily blocks low-frequency engine hums.</p>
+                    <strong style="color: var(--accent-warning);">> The Effect of Added Signal Delay</strong>
+                    <p>Increase the <strong>Added Signal Delay</strong>. The inverted copy is now shifted in time relative to the original. The phase shift produced by a delay depends on frequency: &phi;<sub>delay</sub> = 360&deg; f&tau;. Consequently, some frequency components may be partly cancelled while others may be reinforced. This control applies an artificial delay of up to 2 ms; it does not measure your computer's actual processing or operating-system latency.</p>
                 </div>
             </div>
 
             <div class="math-side">
                 <h3>Signal Flow Architecture</h3>
                 <div class="anc-diagram">
-                    <div>MICROPHONE</div>
+                    <div>SOURCE SIGNAL</div>
                     <div class="anc-arrow">&darr;</div>
-                    <div class="anc-box">Incoming Noise (y<sub>1</sub>)</div>
+                    <div class="anc-box">Split into two paths</div>
+                    <div class="anc-arrow">↙ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↘</div>
+                    <div class="anc-box">Original: y<sub>1</sub></div>
+                    <div class="anc-box" style="border-color: var(--accent-danger); color: var(--accent-danger);">Optional delay + inversion: y<sub>2</sub></div>
                     <div class="anc-arrow">&darr;</div>
-                    <div class="anc-box" style="border-color: var(--accent-danger); color: var(--accent-danger);">DSP (Phase Shift + Latency)</div>
-                    <div class="anc-arrow">&darr;</div>
-                    <div class="anc-box">Anti-Noise (y<sub>2</sub>)</div>
-                    <div class="anc-arrow">&darr;</div>
-                    <div class="anc-box" style="border-color: var(--stage3); color: var(--stage3);">EAR: y<sub>1</sub> + y<sub>2</sub></div>
+                    <div class="anc-box" style="border-color: var(--stage3); color: var(--stage3);">Digital sum: y<sub>1</sub> + y<sub>2</sub></div>
                 </div>
             </div>
         </div>
@@ -346,8 +641,8 @@
     <!-- TAB 3: LIVE MIC -->
     <div id="micTab" class="tab-content">
         <div class="warning-box" style="margin-bottom: 20px; text-align: center;">
-            <strong style="color: var(--accent-danger); font-family: 'Space Mono', monospace;">⚠️ CRITICAL MIC WARNING:</strong>
-            You MUST WEAR HEADPHONES if you activate the Live Microphone input. Routing a live mic directly to laptop speakers will immediately trigger a severe, deafening acoustic feedback loop (howling).
+            <strong style="color: var(--accent-danger); font-family: 'Space Mono', monospace;">⚠️ MICROPHONE MONITORING WARNING:</strong>
+            Use headphones and keep the volume low. Sending a live microphone signal to nearby speakers can create loud acoustic feedback (howling). Stop the microphone immediately if feedback occurs.
         </div>
 
         <div class="controls">
@@ -360,12 +655,12 @@
             </div>
 
             <div class="control-group" style="border-top-color: var(--accent-danger);">
-                <div class="control-header"><label style="color: var(--accent-danger)">Active Noise Cancellation DSP</label></div>
+                <div class="control-header"><label style="color: var(--accent-danger)">Phase-Inversion Demonstration</label></div>
 
                 <label class="toggle-wrapper" style="color: var(--accent-danger); margin-top: 15px;">
-                    <input type="checkbox" id="invertToggleMic"> [ ACTIVATE PHASE INVERSION ]
+                    <input type="checkbox" id="invertToggleMic"> [ ADD INVERTED COPY ]
                 </label>
-                <div style="font-size: 0.75em; color: var(--text-muted); margin-bottom: 25px; line-height: 1.4;"><em>Mathematically mirrors incoming mic signal.</em></div>
+                <div style="font-size: 0.75em; color: var(--text-muted); margin-bottom: 25px; line-height: 1.4;"><em>The secondary path is muted when this is off.</em></div>
 
                 <div class="control-header"><label>Anti-Signal Volume</label></div>
                 <input type="range" id="ancVolMic" min="0" max="1" step="0.01" value="1">
@@ -377,7 +672,7 @@
                     </div>
                 </div>
 
-                <div class="control-header" style="margin-top: 25px;"><label>Hardware Latency Delay</label></div>
+                <div class="control-header" style="margin-top: 25px;"><label>Added Signal Delay</label></div>
                 <input type="range" id="ancDelayMic" min="0" max="2000" step="10" value="0">
                 <div class="input-row">
                     <span class="input-label">Set Delay:</span>
@@ -391,10 +686,10 @@
 
         <div class="info-panel">
             <div class="explanation-side" style="grid-column: 1 / -1;">
-                <h3>Live Environmental Testing</h3>
+                <h3>Live Microphone Loopback Demonstration</h3>
                 <div class="theory-block" style="border-color: var(--stage3);">
-                    <strong style="color: var(--stage3);">> Testing Real-World ANC</strong>
-                    <p>With headphones on, start the microphone. Snap your fingers or speak into the microphone to see the raw wave on the top oscilloscope. When you check <strong>Phase Inversion</strong>, the system will attempt to actively cancel the ambient noise entering your microphone before it reaches your headphones. Because your laptop processes this via Web Audio API, the inherent latency of your operating system (usually 10-30ms) will act as an unavoidable "Hardware Delay," making perfect cancellation of high-frequency speech impossible, perfectly mirroring the physics problem faced by engineers building real ANC headsets.</p>
+                    <strong style="color: var(--stage3);">> Demonstrating Digital Phase Inversion</strong>
+                    <p>With headphones on and volume low, start the microphone. Speak or snap your fingers to view the captured signal. Enabling <strong>Add Inverted Copy</strong> mixes a delayed, inverted copy of that same microphone signal with the original in the browser audio output. This is a digital loopback experiment in superposition, not active cancellation of sound in the room or a working headphone ANC system. The added-delay slider is an artificial 0–2 ms delay; actual device and browser latency is separate and is not measured by this page. Microphone access requires browser permission and a secure context (for example, an HTTPS-hosted page or localhost).</p>
                 </div>
             </div>
         </div>
@@ -418,19 +713,22 @@
             if (isNaN(val)) return;
             let min = parseFloat(slider.min);
             let max = parseFloat(slider.max);
-            if (val > max) val = max;
-            if (val < min) val = min;
+            if (val > max) { val = max; num.value = String(max); }
+            if (val < min) { val = min; num.value = String(min); }
+            // Keep partially typed decimals intact; normalize both controls on blur.
             slider.value = val;
             if(callback) callback();
         });
 
         num.addEventListener('blur', () => {
             let val = parseFloat(num.value);
-            if (isNaN(val)) {
-                num.value = slider.min;
-                slider.value = slider.min;
-                if(callback) callback();
-            }
+            if (isNaN(val)) val = parseFloat(slider.min);
+            let min = parseFloat(slider.min);
+            let max = parseFloat(slider.max);
+            val = Math.max(min, Math.min(max, val));
+            slider.value = val;
+            num.value = slider.value;
+            if(callback) callback();
         });
     }
 
@@ -487,30 +785,39 @@
 
     // --- TAB SYSTEM ---
     let activeTab = 'theory';
-    function switchTab(tab) {
+    function switchTab(tab, button) {
         stopAllAudio();
+        if (typeof window.stopFourierModules === 'function') window.stopFourierModules();
         activeTab = tab;
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-        if(tab === 'theory') {
-            document.querySelectorAll('.tab-btn')[0].classList.add('active');
-            document.getElementById('theoryTab').classList.add('active');
+        const tabMap = {
+            theory: 'theoryTab', fourier: 'fourierTab', analyzer: 'analyzerTab',
+            sampler: 'samplerTab', music: 'musicTab', mic: 'micTab', melody: 'melodyTab'
+        };
+        const panel = document.getElementById(tabMap[tab]);
+        if (panel) panel.classList.add('active');
+        if (button) button.classList.add('active');
+
+        const sharedWaveBox = document.getElementById('universalWaveBox');
+        if (sharedWaveBox) sharedWaveBox.style.display = ['theory', 'music', 'mic'].includes(tab) ? '' : 'none';
+
+        if (tab === 'theory') {
             document.getElementById('canvasTitle').innerText = "> THEORETICAL SUPERPOSITION (MATHEMATICAL WAVES)";
             updateVisualReadouts();
         } else if (tab === 'music') {
-            document.querySelectorAll('.tab-btn')[1].classList.add('active');
-            document.getElementById('musicTab').classList.add('active');
-            document.getElementById('canvasTitle').innerText = "> LIVE OSCILLOSCOPES (AUDIO FILE)";
+            document.getElementById('canvasTitle').innerText = "> DIGITAL SIGNAL SUM (AUDIO FILE)";
             document.getElementById('interferenceState').innerText = "Awaiting Audio Source...";
             document.getElementById('interferenceState').style.color = "var(--text-muted)";
         } else if (tab === 'mic') {
-            document.querySelectorAll('.tab-btn')[2].classList.add('active');
-            document.getElementById('micTab').classList.add('active');
-            document.getElementById('canvasTitle').innerText = "> LIVE OSCILLOSCOPES (MICROPHONE INPUT)";
+            document.getElementById('canvasTitle').innerText = "> MICROPHONE LOOPBACK SIGNAL SUM";
             document.getElementById('interferenceState').innerText = "Awaiting Hardware...";
             document.getElementById('interferenceState').style.color = "var(--text-muted)";
         }
+        // Re-measure canvases after a previously hidden tab becomes visible.
+        window.dispatchEvent(new Event('resize'));
+        requestAnimationFrame(() => { window.dispatchEvent(new Event('resize')); if (tab === 'sampler' && typeof window.refreshSamplerDisplay === 'function') window.refreshSamplerDisplay(); });
     }
 
     // --- 1. VISUALIZATION ENGINE (CANVAS) ---
@@ -523,7 +830,7 @@
     function initHighDPI() {
         const dpr = window.devicePixelRatio || 1;
         canvas.width = C_WIDTH * dpr; canvas.height = C_HEIGHT * dpr;
-        ctx.scale(dpr, dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
     initHighDPI(); window.addEventListener('resize', initHighDPI);
 
@@ -541,15 +848,22 @@
         let phase = getFloatSafe('numPhase');
         let amp = getFloatSafe('numVol1');
 
-        if (fOff !== 0) {
-            ui.stateText.innerText = "Beating (Frequencies Mismatched)";
-            ui.stateText.style.color = "var(--accent-warning)";
-        } else if (amp === 0) {
+        const baseFrequency = getFloatSafe('numFreq') || 440;
+        if (amp === 0) {
             ui.stateText.innerText = "No Wave Generated";
             ui.stateText.style.color = "var(--text-muted)";
-        } else if (phase === 180) {
-            ui.stateText.innerText = "Perfect Destructive Interference";
+        } else if (baseFrequency + fOff < 1) {
+            ui.stateText.innerText = "Secondary frequency limited to 1 Hz";
+            ui.stateText.style.color = "var(--accent-warning)";
+        } else if (fOff !== 0) {
+            ui.stateText.innerText = "Beating (Frequencies Mismatched)";
+            ui.stateText.style.color = "var(--accent-warning)";
+        } else if (phase === 180 && ['sine', 'triangle', 'square'].includes(ui.waveType.value)) {
+            ui.stateText.innerText = "Destructive Interference (half-cycle shift)";
             ui.stateText.style.color = "var(--accent-danger)";
+        } else if (phase === 180 && ui.waveType.value === 'sawtooth') {
+            ui.stateText.innerText = "Partial cancellation: sawtooth even harmonics remain";
+            ui.stateText.style.color = "var(--accent-warning)";
         } else if (phase === 0 || phase === 360) {
             ui.stateText.innerText = "Perfect Constructive Interference";
             ui.stateText.style.color = "var(--stage3)";
@@ -605,7 +919,7 @@
         ctx.clearRect(0, 0, C_WIDTH, C_HEIGHT);
 
         const lanes = [80, 210, 340];
-        const labels = ["SOURCE (y1)", "ANTI-WAVE (y2)", "RESULTANT (y1 + y2)"];
+        const labels = ["SOURCE (y1)", "OPTIONAL INVERTED COPY (y2)", "DIGITAL SUM (y1 + y2)"];
 
         ctx.strokeStyle = '#334155'; ctx.lineWidth = 1;
         for(let i=0; i<3; i++) {
@@ -624,20 +938,22 @@
             let logScale = Math.log10(Math.max(baseFreq, 20) / 20);
             let k = 0.02 + 0.03 * logScale;
             let baseOmega = 0.05 + 0.04 * logScale;
-            let deltaOmega = getFloatSafe('numFreqOff') * 0.01;
+            const secondFrequency = Math.max(1, baseFreq + getFloatSafe('numFreqOff'));
+            const secondOmega = baseOmega * (secondFrequency / baseFreq);
 
             drawWave(lanes[0], A1, k, baseOmega, 0, '#00f0ff', wType);
-            drawWave(lanes[1], A2, k, baseOmega + deltaOmega, phaseRad, '#a855f7', wType);
+            drawWave(lanes[1], A2, k, secondOmega, phaseRad, '#a855f7', wType);
 
             ctx.beginPath();
             for(let x = 0; x <= C_WIDTH; x += 2) {
                 let y1 = A1 * getWaveValue(wType, k * x - baseOmega * time);
-                let y2 = A2 * getWaveValue(wType, k * x - (baseOmega + deltaOmega) * time + phaseRad);
+                let y2 = A2 * getWaveValue(wType, k * x - secondOmega * time + phaseRad);
                 let yRes = lanes[2] - (y1 + y2);
                 if (x === 0) ctx.moveTo(x, yRes); else ctx.lineTo(x, yRes);
             }
             let phaseDeg = getFloatSafe('numPhase');
-            let resColor = (phaseDeg > 160 && phaseDeg < 200 && getFloatSafe('numFreqOff') === 0) ? '#ef4444' : '#10b981';
+            const halfCycleCancels = ['sine', 'triangle', 'square'].includes(wType);
+            let resColor = (phaseDeg > 160 && phaseDeg < 200 && getFloatSafe('numFreqOff') === 0 && halfCycleCancels) ? '#ef4444' : '#10b981';
             ctx.strokeStyle = resColor; ctx.lineWidth = 3; ctx.stroke();
 
         } else {
@@ -690,7 +1006,6 @@
         toneOsc2.connect(tDelay2).connect(tGain2).connect(masterGain).connect(audioCtx.destination);
 
         toneOsc1.start(); toneOsc2.start();
-        updateTruePhaseParams();
     }
 
     function updateTruePhaseParams() {
@@ -700,18 +1015,23 @@
         let vol = getFloatSafe('numVol1');
         let phaseDeg = getFloatSafe('numPhase');
         let fOff = getFloatSafe('numFreqOff');
+        const secondFrequency = Math.max(1, baseFreq + fOff);
 
         let selectedType = document.getElementById('waveType').value;
         toneOsc1.type = selectedType;
         toneOsc2.type = selectedType;
 
         toneOsc1.frequency.setTargetAtTime(baseFreq, audioCtx.currentTime, 0.1);
-        toneOsc2.frequency.setTargetAtTime(baseFreq + fOff, audioCtx.currentTime, 0.1);
+        toneOsc2.frequency.setTargetAtTime(secondFrequency, audioCtx.currentTime, 0.1);
 
         tGain1.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.05);
         tGain2.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.05);
 
-        let delaySeconds = (phaseDeg / 360.0) * (1.0 / baseFreq);
+        // A DelayNode produces a phase lag. Use the complementary period fraction
+        // so the audible second tone has the same +phi convention as the canvas.
+        const normalizedPhase = ((phaseDeg % 360) + 360) % 360;
+        const delayFraction = ((360 - normalizedPhase) % 360) / 360;
+        const delaySeconds = delayFraction / secondFrequency;
         tDelay2.delayTime.setTargetAtTime(delaySeconds, audioCtx.currentTime, 0.05);
     }
 
@@ -727,6 +1047,7 @@
                 tGain2.gain.value = getFloatSafe('numVol1');
             }
             isTonePlaying = true;
+            updateTruePhaseParams();
             e.target.innerText = "⏸ STOP TONES"; e.target.classList.add('danger');
         } else {
             stopAllAudio();
@@ -784,12 +1105,14 @@
 
     // --- 3. AUDIO ENGINE: PRACTICAL MUSIC ---
     let musicAudioEl = new Audio();
+    let currentObjectUrl = null;
     let musicSourceNode, mOrigGain, mAncGain, mAncDelay, finalResGainMusic;
     let analyserSrcMusic, analyserAntiMusic, analyserResMusic;
 
     // Load Default Track Button
     document.getElementById('loadDefaultBtn').addEventListener('click', () => {
         if(isMusicPlaying) stopAllAudio();
+        if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
 
         document.getElementById('uploadLabel').innerText = "[ LOADED: 'ON MY MIND' (CLICK TO CHANGE) ]";
         document.getElementById('uploadLabel').style.borderColor = "var(--stage1)";
@@ -806,12 +1129,14 @@
         if(!file) return;
 
         if(isMusicPlaying) stopAllAudio();
+        if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+        currentObjectUrl = URL.createObjectURL(file);
 
         document.getElementById('uploadLabel').innerText = "[ " + file.name.substring(0,15) + "... (CLICK TO CHANGE) ]";
         document.getElementById('uploadLabel').style.borderColor = "var(--stage3)";
         document.getElementById('uploadLabel').style.color = "var(--stage3)";
 
-        musicAudioEl.src = URL.createObjectURL(file);
+        musicAudioEl.src = currentObjectUrl;
         document.getElementById('playMusicBtn').disabled = false;
         document.getElementById('playMusicBtn').classList.remove('secondary');
         document.getElementById('musicStatus').innerHTML = `Custom File Loaded. Ready to play.`;
@@ -848,30 +1173,42 @@
         let ancVol = getFloatSafe('numAncVolMusic');
         let delayUs = getFloatSafe('numAncDelayMusic');
 
-        let finalAncGain = invert ? -ancVol : ancVol;
+        // The original path is always present. Keep the duplicate branch silent
+        // unless the user explicitly enables the inverted-copy experiment.
+        let finalAncGain = invert ? -ancVol : 0;
         mAncGain.gain.setTargetAtTime(finalAncGain, audioCtx.currentTime, 0.05);
         mAncDelay.delayTime.setTargetAtTime(delayUs / 1000000.0, audioCtx.currentTime, 0.05);
 
         if (invert && delayUs === 0 && ancVol === 1) {
-            document.getElementById('interferenceState').innerText = "Perfect Phase Cancellation (Silence)";
+            document.getElementById('interferenceState').innerText = "Ideal digital cancellation (matched copy)";
             document.getElementById('interferenceState').style.color = "var(--accent-danger)";
         } else if (invert) {
-            document.getElementById('interferenceState').innerText = "Imperfect Cancellation (Hardware Delay Bleed)";
+            document.getElementById('interferenceState').innerText = "Frequency-dependent cancellation / reinforcement";
             document.getElementById('interferenceState').style.color = "var(--accent-warning)";
         } else {
-            document.getElementById('interferenceState').innerText = "Standard Playback (No ANC)";
+            document.getElementById('interferenceState').innerText = "Original audio only (secondary path muted)";
             document.getElementById('interferenceState').style.color = "var(--text-muted)";
         }
     }
 
     document.getElementById('invertToggleMusic').addEventListener('change', updateMusicParams);
 
-    document.getElementById('playMusicBtn').addEventListener('click', (e) => {
+    document.getElementById('playMusicBtn').addEventListener('click', async (e) => {
         if(!isMusicPlaying) {
-            initMusicEngine();
-            musicAudioEl.play();
-            isMusicPlaying = true;
-            e.target.innerText = "⏸ STOP AUDIO FILE"; e.target.classList.add('danger');
+            try {
+                initMusicEngine();
+                if (audioCtx.state === 'suspended') await audioCtx.resume();
+                await musicAudioEl.play();
+                isMusicPlaying = true;
+                e.target.innerText = "⏸ STOP AUDIO FILE"; e.target.classList.add('danger');
+                updateMusicParams();
+            } catch (err) {
+                isMusicPlaying = false;
+                document.getElementById('musicStatus').textContent =
+                    "Could not play this audio. Check that audio.mp3 exists or choose a supported local file.";
+                e.target.innerText = "▶ PLAY AUDIO FILE";
+                e.target.classList.remove('danger');
+            }
         } else {
             stopAllAudio();
         }
@@ -885,9 +1222,15 @@
     document.getElementById('startMicBtn').addEventListener('click', async (e) => {
         if(isMicLive) { stopAllAudio(); return; }
 
+        const status = document.getElementById('micStatus');
         try {
+            if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                status.textContent = "Microphone access requires HTTPS or localhost in a supported browser.";
+                return;
+            }
+
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
 
             micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
 
@@ -912,11 +1255,19 @@
             isMicLive = true;
             e.target.innerText = "⏸ STOP LIVE MICROPHONE";
             e.target.classList.add('danger');
-            document.getElementById('micStatus').innerHTML = `<span style="color:var(--accent-danger)">MIC ACTIVE. DSP RUNNING.</span>`;
-
+            status.innerHTML = `<span style="color:var(--stage3)">MICROPHONE ACTIVE — LOOPBACK RUNNING.</span>`;
             updateMicParams();
         } catch(err) {
-            alert("Microphone access denied. Please allow microphone permissions in your browser.");
+            if (micStream) { micStream.getTracks().forEach(track => track.stop()); micStream = null; }
+            isMicLive = false;
+            e.target.innerText = "🎤 START LIVE MICROPHONE";
+            e.target.classList.remove('danger');
+            const messages = {
+                NotAllowedError: "Microphone permission was denied. Allow access in your browser settings and try again.",
+                NotFoundError: "No microphone was found on this device.",
+                NotReadableError: "The microphone is unavailable or being used by another application."
+            };
+            status.textContent = messages[err.name] || "Could not start the microphone. Check browser permissions and device settings.";
         }
     });
 
@@ -928,24 +1279,1016 @@
         let ancVol = getFloatSafe('numAncVolMic');
         let delayUs = getFloatSafe('numAncDelayMic');
 
-        let finalAncGain = invert ? -ancVol : ancVol;
+        // Monitor the microphone signal normally; add the inverted duplicate
+        // only while the phase-inversion demonstration is enabled.
+        let finalAncGain = invert ? -ancVol : 0;
         micAncGain.gain.setTargetAtTime(finalAncGain, audioCtx.currentTime, 0.05);
         micAncDelay.delayTime.setTargetAtTime(delayUs / 1000000.0, audioCtx.currentTime, 0.05);
 
         if (invert && delayUs === 0 && ancVol === 1) {
-            document.getElementById('interferenceState').innerText = "Live Active Noise Cancellation";
+            document.getElementById('interferenceState').innerText = "Ideal digital microphone-loopback cancellation";
             document.getElementById('interferenceState').style.color = "var(--accent-danger)";
         } else if (invert) {
-            document.getElementById('interferenceState').innerText = "Imperfect Cancellation (Hardware Delay Bleed)";
+            document.getElementById('interferenceState').innerText = "Frequency-dependent cancellation / reinforcement";
             document.getElementById('interferenceState').style.color = "var(--accent-warning)";
         } else {
-            document.getElementById('interferenceState').innerText = "Mic Passthrough (No ANC)";
+            document.getElementById('interferenceState').innerText = "Microphone loopback (secondary path muted)";
             document.getElementById('interferenceState').style.color = "var(--text-muted)";
         }
     }
 
     document.getElementById('invertToggleMic').addEventListener('change', updateMicParams);
 
+    // Release microphone tracks and temporary local-file URLs when leaving the page.
+    window.addEventListener('pagehide', (event) => {
+        stopAllAudio();
+        // Keep the context and local-file URL intact if the browser stores this page in BFCache.
+        if (!event.persisted) {
+            if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
+            if (audioCtx && audioCtx.state !== 'closed') audioCtx.close().catch(() => {});
+        }
+    });
+
 </script>
+
+<script>
+/*
+ * Fourier Lab modules adapted into the existing WaveLab page.
+ * Kept in a private scope to avoid colliding with the original ANC script.
+ */
+(() => {
+    const $ = (id) => document.getElementById(id);
+    const harmonicCount = 9;
+    const harmonicColors = ['#00f0ff','#3b82f6','#8b5cf6','#a855f7','#d946ef','#ec4899','#f43f5e','#ef4444','#f97316'];
+    let coefficients = [1,0,0,0,0,0,0,0,0];
+    let fundamental = 220;
+    let synthTime = 0;
+    let synthPlaying = false;
+    let fourierAudioCtx = null;
+    let synthMasterGain = null;
+    let synthOscillators = [];
+    let synthGains = [];
+    let synthDims = { time:null, freq:null };
+
+    let analyzerElement = $('fa_audioElement');
+    let analyzerFileUrl = null;
+    let analyzerSource = null;
+    let analyzerNode = null;
+    let analyzerTimeData = null;
+    let analyzerFloatData = null;
+    let analyzerFrequencyData = null;
+    let analyzerDims = { wave:null, fft:null, spec:null };
+    let analyzerPlaying = false;
+    let analyzerFrameCounter = 0;
+
+    let samplerOscillator = null;
+    let samplerProcessor = null;
+    let samplerPlaying = false;
+    let samplerFrequency = 440;
+    let samplerRate = 44100;
+    let samplerBits = 16;
+    let samplerDims = null;
+    let samplerPlayStartedAt = 0;
+
+    function ensureAudioContext() {
+        if (!fourierAudioCtx) fourierAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (fourierAudioCtx.state === 'suspended') return fourierAudioCtx.resume();
+        return Promise.resolve();
+    }
+
+    function resizeCanvas(canvasId) {
+        const canvas = $(canvasId);
+        if (!canvas || canvas.clientWidth === 0) return null;
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const width = Math.max(1, rect.width);
+        const height = Math.max(1, rect.height);
+        const pixelWidth = Math.max(1, Math.round(width * dpr));
+        const pixelHeight = Math.max(1, Math.round(height * dpr));
+        if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+            canvas.width = pixelWidth;
+            canvas.height = pixelHeight;
+        }
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        return { canvas, ctx, width, height, dpr };
+    }
+
+    function resizeFourierCanvases() {
+        if ($('fourierTab').classList.contains('active')) {
+            synthDims.time = resizeCanvas('fs_timeCanvas');
+            synthDims.freq = resizeCanvas('fs_freqCanvas');
+        }
+        if ($('analyzerTab').classList.contains('active')) {
+            analyzerDims.wave = resizeCanvas('fa_waveCanvas');
+            analyzerDims.fft = resizeCanvas('fa_fftCanvas');
+            analyzerDims.spec = resizeCanvas('fa_spectrogramCanvas');
+            if (analyzerDims.spec) {
+                analyzerDims.spec.ctx.fillStyle = '#000';
+                analyzerDims.spec.ctx.fillRect(0, 0, analyzerDims.spec.width, analyzerDims.spec.height);
+            }
+        }
+        if ($('samplerTab').classList.contains('active')) { samplerDims = resizeCanvas('ds_samplerCanvas'); requestAnimationFrame(() => { samplerDims = resizeCanvas('ds_samplerCanvas'); drawSampler(); }); }
+        drawSynthesis();
+        drawSampler();
+    }
+
+    // ---------- Fourier synthesis ----------
+    const harmonicContainer = $('fs_harmonicsContainer');
+    for (let i = 0; i < harmonicCount; i++) {
+        const n = i + 1;
+        const card = document.createElement('div');
+        card.className = 'fourier-harmonic-control';
+        card.style.borderTopColor = harmonicColors[i];
+        card.innerHTML = `
+            <label style="color:${harmonicColors[i]}">${n === 1 ? 'f₀' : `${n}f₀`}</label>
+            <div id="fs_freqLabel${i}" style="font:0.68em 'Space Mono';color:var(--text-muted);margin-bottom:8px;">${fundamental*n} Hz</div>
+            <input type="range" orient="vertical" min="-1" max="1" step="0.01" value="${coefficients[i]}" id="fs_slider${i}" aria-label="Harmonic ${n} coefficient">
+            <input type="number" class="num-input" step="0.01" min="-1" max="1" value="${coefficients[i].toFixed(2)}" id="fs_value${i}" aria-label="Harmonic ${n} coefficient value">
+        `;
+        harmonicContainer.appendChild(card);
+        const slider = $(`fs_slider${i}`);
+        const input = $(`fs_value${i}`);
+        slider.addEventListener('input', () => {
+            coefficients[i] = Number(slider.value);
+            input.value = coefficients[i].toFixed(2);
+            updateFourierEquation(); drawSynthesis(); updateSynthSound();
+        });
+        input.addEventListener('change', () => {
+            const value = Number(input.value);
+            const safe = Number.isFinite(value) ? Math.max(-1, Math.min(1, value)) : 0;
+            coefficients[i] = safe;
+            slider.value = String(safe);
+            input.value = safe.toFixed(2);
+            updateFourierEquation(); drawSynthesis(); updateSynthSound();
+        });
+    }
+
+    function updateFourierEquation() {
+        const terms = [];
+        for (let i = 0; i < harmonicCount; i++) {
+            const a = coefficients[i];
+            if (Math.abs(a) < 0.005) continue;
+            const n = i + 1;
+            const sign = a < 0 ? '−' : (terms.length ? '+' : '');
+            terms.push(`${sign} <span style="color:${harmonicColors[i]}">${Math.abs(a).toFixed(2)} sin(${n === 1 ? '' : n}ωt)</span>`);
+        }
+        $('fs_equationDisplay').innerHTML = terms.length ? `x(t) = ${terms.join(' ')}` : 'x(t) = 0';
+    }
+
+    function setHarmonics(values) {
+        coefficients = values.slice(0, harmonicCount);
+        while (coefficients.length < harmonicCount) coefficients.push(0);
+        for (let i = 0; i < harmonicCount; i++) {
+            $(`fs_slider${i}`).value = String(coefficients[i]);
+            $(`fs_value${i}`).value = coefficients[i].toFixed(2);
+        }
+        updateFourierEquation(); drawSynthesis(); updateSynthSound();
+    }
+
+    const fourierPresets = {
+        sine: [1,0,0,0,0,0,0,0,0],
+        square: [1,0,1/3,0,1/5,0,1/7,0,1/9],
+        triangle: [1,0,-1/9,0,1/25,0,-1/49,0,1/81],
+        sawtooth: [1,-1/2,1/3,-1/4,1/5,-1/6,1/7,-1/8,1/9],
+        clear: [0,0,0,0,0,0,0,0,0]
+    };
+    document.querySelectorAll('[data-fourier-preset]').forEach(button => {
+        button.addEventListener('click', () => setHarmonics(fourierPresets[button.dataset.fourierPreset] || fourierPresets.sine));
+    });
+
+    function updateFundamental(value) {
+        const parsed = Number(value);
+        fundamental = Number.isFinite(parsed) ? Math.max(55, Math.min(880, parsed)) : 220;
+        $('fs_f0Slider').value = String(fundamental);
+        $('fs_f0Input').value = String(Math.round(fundamental));
+        for (let i = 0; i < harmonicCount; i++) $(`fs_freqLabel${i}`).textContent = `${Math.round(fundamental*(i+1))} Hz`;
+        updateSynthSound();
+    }
+    $('fs_f0Slider').addEventListener('input', () => updateFundamental($('fs_f0Slider').value));
+    $('fs_f0Input').addEventListener('change', () => updateFundamental($('fs_f0Input').value));
+
+    function drawSynthesis() {
+        const time = synthDims.time;
+        const freq = synthDims.freq;
+        if (!time || !freq) return;
+        const ctx = time.ctx, w = time.width, h = time.height, cy = h/2;
+        ctx.clearRect(0,0,w,h);
+        ctx.strokeStyle = '#334155'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(w,cy); ctx.stroke();
+        ctx.strokeStyle = 'rgba(148,163,184,0.25)';
+        for (let k=1;k<4;k++) { const x=w*k/4; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+        ctx.beginPath();
+        const scale = h*0.37;
+        for (let x=0;x<=w;x+=2) {
+            const phase = (x/w)*Math.PI*4 - synthTime;
+            let yVal=0;
+            for (let i=0;i<harmonicCount;i++) yVal += coefficients[i]*Math.sin((i+1)*phase);
+            const y=cy-yVal*scale;
+            if (x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle='#fff'; ctx.lineWidth=2.5; ctx.stroke();
+
+        const fctx=freq.ctx, fw=freq.width, fh=freq.height;
+        fctx.clearRect(0,0,fw,fh);
+        const baseY=fh-30, gap=fw/harmonicCount, barW=gap*0.56, maxH=fh-55;
+        fctx.strokeStyle='#475569'; fctx.beginPath(); fctx.moveTo(0,baseY); fctx.lineTo(fw,baseY); fctx.stroke();
+        for (let i=0;i<harmonicCount;i++) {
+            const mag=Math.abs(coefficients[i]);
+            const barH=mag*maxH;
+            const x=i*gap+(gap-barW)/2;
+            fctx.fillStyle=harmonicColors[i]; fctx.fillRect(x,baseY-barH,barW,barH);
+            fctx.fillStyle='#94a3b8'; fctx.font='11px "Space Mono"'; fctx.textAlign='center';
+            fctx.fillText(`${i+1}f₀`,x+barW/2,baseY+17);
+        }
+    }
+
+    function createSynthNodes() {
+        synthMasterGain = fourierAudioCtx.createGain();
+        synthMasterGain.gain.value = 0;
+        synthMasterGain.connect(fourierAudioCtx.destination);
+        synthOscillators=[]; synthGains=[];
+        for (let i=0;i<harmonicCount;i++) {
+            const osc=fourierAudioCtx.createOscillator();
+            const gain=fourierAudioCtx.createGain();
+            osc.type='sine';
+            osc.frequency.value=fundamental*(i+1);
+            gain.gain.value=0;
+            osc.connect(gain); gain.connect(synthMasterGain); osc.start();
+            synthOscillators.push(osc); synthGains.push(gain);
+        }
+    }
+    function updateSynthSound() {
+        if (!synthPlaying || !fourierAudioCtx || !synthMasterGain) return;
+        const now=fourierAudioCtx.currentTime;
+        for (let i=0;i<harmonicCount;i++) {
+            synthOscillators[i].frequency.setTargetAtTime(fundamental*(i+1),now,0.03);
+            // Signed gain preserves a negative Fourier coefficient as a 180° phase reversal.
+            synthGains[i].gain.setTargetAtTime(coefficients[i]*0.12,now,0.03);
+        }
+    }
+    async function startSynth() {
+        await ensureAudioContext();
+        if (!synthOscillators.length) createSynthNodes();
+        synthPlaying=true;
+        synthMasterGain.gain.setTargetAtTime(1, fourierAudioCtx.currentTime, 0.04);
+        updateSynthSound();
+        $('fs_masterPlayBtn').textContent='■ STOP SYNTHESIS';
+        $('fs_masterPlayBtn').classList.add('danger');
+    }
+    function stopSynth() {
+        synthPlaying=false;
+        if (synthMasterGain && fourierAudioCtx) synthMasterGain.gain.setTargetAtTime(0,fourierAudioCtx.currentTime,0.04);
+        $('fs_masterPlayBtn').textContent='▶ PLAY SYNTHESIS';
+        $('fs_masterPlayBtn').classList.remove('danger');
+    }
+    $('fs_masterPlayBtn').addEventListener('click', () => synthPlaying ? stopSynth() : startSynth().catch(err => alert(`Audio could not start: ${err.message}`)));
+
+    function animateSynthesis() {
+        requestAnimationFrame(animateSynthesis);
+        if (!$('fourierTab').classList.contains('active') || !synthDims.time) return;
+        synthTime += 0.035;
+        drawSynthesis();
+    }
+    requestAnimationFrame(animateSynthesis);
+    updateFourierEquation();
+
+    // ---------- Audio analyzer ----------
+    async function setupAnalyzer() {
+        await ensureAudioContext();
+        if (!analyzerNode) {
+            analyzerNode = fourierAudioCtx.createAnalyser();
+            analyzerNode.fftSize = 2048;
+            analyzerNode.smoothingTimeConstant = 0.72;
+            analyzerNode.minDecibels = -95;
+            analyzerNode.maxDecibels = -15;
+            analyzerSource = fourierAudioCtx.createMediaElementSource(analyzerElement);
+            analyzerSource.connect(analyzerNode);
+            analyzerNode.connect(fourierAudioCtx.destination);
+            analyzerTimeData = new Float32Array(analyzerNode.fftSize);
+            analyzerFrequencyData = new Uint8Array(analyzerNode.frequencyBinCount);
+        }
+    }
+    $('fa_audioUpload').addEventListener('change', () => {
+        const file=$('fa_audioUpload').files && $('fa_audioUpload').files[0];
+        if (!file) return;
+        analyzerElement.pause();
+        if (analyzerFileUrl) URL.revokeObjectURL(analyzerFileUrl);
+        analyzerFileUrl=URL.createObjectURL(file);
+        analyzerElement.src=analyzerFileUrl;
+        analyzerElement.load();
+        $('fa_livePitchReadout').textContent='READY';
+        $('fa_pitchUI').style.opacity='1';
+        if (analyzerDims.spec) {
+            analyzerDims.spec.ctx.fillStyle='#000';
+            analyzerDims.spec.ctx.fillRect(0,0,analyzerDims.spec.width,analyzerDims.spec.height);
+        }
+    });
+    analyzerElement.addEventListener('play', async () => {
+        try { await setupAnalyzer(); analyzerPlaying=true; }
+        catch (err) { analyzerPlaying=false; $('fa_livePitchReadout').textContent='AUDIO ERROR'; }
+    });
+    analyzerElement.addEventListener('pause', () => { analyzerPlaying=false; $('fa_livePitchReadout').textContent='PAUSED'; });
+    analyzerElement.addEventListener('ended', () => { analyzerPlaying=false; $('fa_livePitchReadout').textContent='ENDED'; });
+
+    function estimatePitch(buffer, sampleRate) {
+        // Remove DC offset and reject near-silence before autocorrelation.
+        let mean=0;
+        for (let i=0;i<buffer.length;i++) mean+=buffer[i];
+        mean/=buffer.length;
+        let rms=0;
+        for (let i=0;i<buffer.length;i++) { const v=buffer[i]-mean; rms+=v*v; }
+        rms=Math.sqrt(rms/buffer.length);
+        if (rms<0.012) return -1;
+
+        const minLag=Math.max(2,Math.floor(sampleRate/2000));
+        const maxLag=Math.min(buffer.length-2,Math.floor(sampleRate/50));
+        const correlations=new Float64Array(maxLag+2);
+        for (let lag=minLag;lag<=maxLag;lag++) {
+            let sum=0;
+            const count=buffer.length-lag;
+            for (let i=0;i<count;i++) sum+=(buffer[i]-mean)*(buffer[i+lag]-mean);
+            correlations[lag]=sum/count;
+        }
+
+        // Choose the first strong local maximum after the initial decline.
+        // Later peaks are often integer multiples of the true period and can
+        // otherwise make a 440 Hz tone appear to be 220, 110, or 55 Hz.
+        const peakFloor=rms*rms*0.20;
+        let bestLag=-1;
+        for (let lag=minLag+1;lag<maxLag;lag++) {
+            if (correlations[lag]>=correlations[lag-1] &&
+                correlations[lag]>correlations[lag+1] &&
+                correlations[lag]>=peakFloor) {
+                bestLag=lag;
+                break;
+            }
+        }
+        // Boundary fallback for a tone whose period reaches the maximum lag.
+        if (bestLag<0 && correlations[maxLag]>correlations[maxLag-1] && correlations[maxLag]>=peakFloor) bestLag=maxLag;
+        if (bestLag<0) {
+            let best=-Infinity;
+            for (let lag=minLag;lag<=maxLag;lag++) {
+                if (correlations[lag]>best) { best=correlations[lag]; bestLag=lag; }
+            }
+        }
+        if (bestLag<0 || correlations[bestLag]<=0) return -1;
+
+        // Parabolic interpolation around the selected peak for sub-sample lag.
+        let refined=bestLag;
+        if (bestLag>minLag && bestLag<maxLag) {
+            const left=correlations[bestLag-1], center=correlations[bestLag], right=correlations[bestLag+1];
+            const denom=left-2*center+right;
+            if (Math.abs(denom)>1e-12) refined+=0.5*(left-right)/denom;
+        }
+        const frequency=sampleRate/refined;
+        return Number.isFinite(frequency) ? frequency : -1;
+    }
+    function drawAnalyzer() {
+        if (!analyzerNode || !analyzerDims.wave || !analyzerDims.fft || !analyzerDims.spec) return;
+        analyzerNode.getFloatTimeDomainData(analyzerTimeData);
+        analyzerNode.getByteFrequencyData(analyzerFrequencyData);
+        const wave=analyzerDims.wave, wctx=wave.ctx, w=wave.width, h=wave.height;
+        wctx.clearRect(0,0,w,h); wctx.strokeStyle='#334155'; wctx.beginPath(); wctx.moveTo(0,h/2); wctx.lineTo(w,h/2); wctx.stroke();
+        wctx.beginPath();
+        for (let i=0;i<analyzerTimeData.length;i++) {
+            const x=i/(analyzerTimeData.length-1)*w;
+            const y=h/2-analyzerTimeData[i]*(h*0.42);
+            if (i===0) wctx.moveTo(x,y); else wctx.lineTo(x,y);
+        }
+        wctx.strokeStyle='#00f0ff'; wctx.lineWidth=1.8; wctx.stroke();
+
+        const fft=analyzerDims.fft, fctx=fft.ctx, fw=fft.width, fh=fft.height;
+        fctx.clearRect(0,0,fw,fh);
+        const bins=analyzerFrequencyData.length;
+        const step=fw/bins;
+        for (let i=0;i<bins;i++) {
+            const level=analyzerFrequencyData[i]/255;
+            const barHeight=level*(fh-18);
+            fctx.fillStyle=`hsl(${190-30*level},100%,${18+48*level}%)`;
+            fctx.fillRect(i*step,fh-barHeight,Math.max(1,step),barHeight);
+        }
+        fctx.fillStyle='#94a3b8'; fctx.font='10px "Space Mono"'; fctx.textAlign='left'; fctx.fillText('0 Hz',4,12);
+        fctx.textAlign='right'; fctx.fillText(`${Math.round(fourierAudioCtx.sampleRate/2)} Hz`,fw-4,12);
+
+        // Use physical canvas dimensions because the drawing transform
+        // is temporarily reset to identity below.
+        const spec = analyzerDims.spec;
+        const sctx = spec.ctx;
+        const sw = spec.canvas.width;
+        const sh = spec.canvas.height;
+        const dpr = spec.dpr;
+        // Scroll by ~2 CSS pixels per update, then paint a fresh log-frequency column.
+        // Log mapping gives bass frequencies enough vertical space to be readable.
+        sctx.setTransform(1,0,0,1,0,0);
+        const physicalShift=Math.max(1,Math.round(dpr*2));
+        sctx.drawImage(spec.canvas,-physicalShift,0);
+        const nyquist=fourierAudioCtx.sampleRate/2;
+        const minSpecHz=40;
+        const maxSpecHz=Math.min(16000,nyquist);
+        const logRange=Math.log(maxSpecHz/minSpecHz);
+        const palette=[
+            [0,0,0,0], [8,12,32,0], [26,35,92,0], [81,45,140,0],
+            [20,145,190,0], [80,205,170,0], [245,175,55,0], [255,245,210,0]
+        ];
+        function specColor(value) {
+            let level=Math.max(0,Math.min(1,(value-0.10)/0.90));
+            level=Math.pow(level,0.82);
+            const p=level*(palette.length-1), idx=Math.min(palette.length-2,Math.floor(p)), t=p-idx;
+            const a=palette[idx], b=palette[idx+1];
+            return `rgb(${Math.round(a[0]+(b[0]-a[0])*t)},${Math.round(a[1]+(b[1]-a[1])*t)},${Math.round(a[2]+(b[2]-a[2])*t)})`;
+        }
+        const x0=sw-physicalShift;
+        for (let y=0;y<sh;y++) {
+            const fraction=y/Math.max(1,sh-1);
+            const hz=maxSpecHz*Math.exp(-fraction*logRange);
+            const bin=Math.max(0,Math.min(bins-1,Math.round((hz/nyquist)*(bins-1))));
+            const level=analyzerFrequencyData[bin]/255;
+            sctx.fillStyle=specColor(level);
+            sctx.fillRect(x0,y,physicalShift,1);
+        }
+        // Keep this canvas as a pure scrolling spectrogram bitmap. Static
+        // frequency guides belong in the axis labels, not here: drawing them
+        // on every scrolling frame makes them accumulate into bright stripes.
+        sctx.setTransform(dpr,0,0,dpr,0,0);
+        analyzerFrameCounter++;
+        if (analyzerFrameCounter%8===0) {
+            const pitch=estimatePitch(analyzerTimeData,fourierAudioCtx.sampleRate);
+            if (pitch>=50 && pitch<=2000) $('fa_livePitchReadout').textContent=`${Math.round(pitch)} Hz`;
+            else $('fa_livePitchReadout').textContent='NO STABLE PITCH';
+        }
+    }
+    function analyzerLoop() {
+        requestAnimationFrame(analyzerLoop);
+        if (analyzerPlaying && $('analyzerTab').classList.contains('active')) drawAnalyzer();
+    }
+    requestAnimationFrame(analyzerLoop);
+
+    // ---------- Digital sampler ----------
+    function quantizeSample(value, bits) {
+        const levels=Math.pow(2,bits);
+        const maxCode=levels-1;
+        const clamped=Math.max(-1,Math.min(1,value));
+        const code=Math.round((clamped+1)*0.5*maxCode);
+        return (code/maxCode)*2-1;
+    }
+    function updateSamplerWarning() {
+        const warning=$('ds_samplerWarning');
+        if (samplerFrequency>=samplerRate/2) {
+            warning.style.display='block';
+            warning.textContent=`Aliasing risk: the input tone (${samplerFrequency} Hz) is at or above the Nyquist frequency (${(samplerRate/2).toFixed(0)} Hz). This demonstration has no anti-aliasing filter.`;
+        } else {
+            warning.style.display='none';
+            warning.textContent='';
+        }
+        drawSampler();
+    }
+    function setSamplerFrequency(value) {
+        const parsed=Number(value);
+        samplerFrequency=Number.isFinite(parsed)?Math.max(100,Math.min(2000,parsed)):440;
+        $('ds_samplerFreq').value=String(samplerFrequency);
+        $('ds_samplerFreqInput').value=String(Math.round(samplerFrequency));
+        if (samplerOscillator && fourierAudioCtx) samplerOscillator.frequency.setTargetAtTime(samplerFrequency,fourierAudioCtx.currentTime,0.025);
+        updateSamplerWarning();
+    }
+    function setSamplerRate(value) {
+        const parsed=Number(value);
+        samplerRate=Number.isFinite(parsed)?Math.max(200,Math.min(44100,parsed)):44100;
+        $('ds_srSlider').value=String(samplerRate);
+        $('ds_srInput').value=String(Math.round(samplerRate));
+        updateSamplerWarning();
+    }
+    function setSamplerBits(value) {
+        const parsed=Number(value);
+        samplerBits=Number.isFinite(parsed)?Math.max(2,Math.min(16,Math.round(parsed))):16;
+        $('ds_bitSlider').value=String(samplerBits);
+        $('ds_bitInput').value=String(samplerBits);
+        drawSampler();
+    }
+    $('ds_samplerFreq').addEventListener('input',()=>setSamplerFrequency($('ds_samplerFreq').value));
+    $('ds_samplerFreqInput').addEventListener('change',()=>setSamplerFrequency($('ds_samplerFreqInput').value));
+    $('ds_srSlider').addEventListener('input',()=>setSamplerRate($('ds_srSlider').value));
+    $('ds_srInput').addEventListener('change',()=>setSamplerRate($('ds_srInput').value));
+    $('ds_bitSlider').addEventListener('input',()=>setSamplerBits($('ds_bitSlider').value));
+    $('ds_bitInput').addEventListener('change',()=>setSamplerBits($('ds_bitInput').value));
+
+    function drawSampler() {
+        if (!samplerDims) return;
+        const {ctx,width:w,height:h}=samplerDims;
+        if (!w || !h) return;
+        ctx.clearRect(0,0,w,h);
+        ctx.fillStyle='#05070d'; ctx.fillRect(0,0,w,h);
+        const left=24, right=w-18, plotW=right-left;
+        const top=28, bottom=h-24, gap=12;
+        const laneH=(bottom-top-gap*2)/3;
+        const duration=4/samplerFrequency;
+        const lanes=[
+            {name:'1  CONTINUOUS INPUT',color:'#e2e8f0'},
+            {name:'2  QUANTISED SAMPLES',color:'#f59e0b'},
+            {name:'3  ZERO-ORDER HOLD OUTPUT',color:'#22d3ee'}
+        ];
+        const cyFor=(laneIndex,value)=>top+laneIndex*(laneH+gap)+laneH/2-value*(laneH*0.39);
+        const xFor=(t)=>left+Math.max(0,Math.min(1,t/duration))*plotW;
+
+        // Time guides and the three clearly separated signal stages.
+        for(let lane=0;lane<3;lane++){
+            const laneTop=top+lane*(laneH+gap);
+            ctx.fillStyle=lane===0?'rgba(226,232,240,0.035)':lane===1?'rgba(245,158,11,0.035)':'rgba(34,211,238,0.035)';
+            ctx.fillRect(left,laneTop,plotW,laneH);
+            ctx.strokeStyle='rgba(148,163,184,0.30)'; ctx.lineWidth=1;
+            ctx.beginPath(); ctx.moveTo(left,laneTop+laneH/2); ctx.lineTo(right,laneTop+laneH/2); ctx.stroke();
+            ctx.strokeStyle='rgba(148,163,184,0.12)';
+            for(let tick=0;tick<=4;tick++){
+                const x=left+plotW*tick/4;
+                ctx.beginPath(); ctx.moveTo(x,laneTop); ctx.lineTo(x,laneTop+laneH); ctx.stroke();
+            }
+        }
+
+        // 1) Ideal continuous input signal.
+        ctx.beginPath();
+        const smoothPoints=Math.max(600,Math.round(plotW));
+        for(let i=0;i<=smoothPoints;i++){
+            const t=(i/smoothPoints)*duration;
+            const value=Math.sin(2*Math.PI*samplerFrequency*t);
+            const x=left+(i/smoothPoints)*plotW;
+            const y=cyFor(0,value);
+            if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle='#e2e8f0'; ctx.lineWidth=1.8; ctx.stroke();
+
+        // Work out sample instants across exactly four cycles.
+        const sampleCount=Math.max(2,Math.floor(duration*samplerRate)+1);
+        const sampleData=[];
+        for(let k=0;k<sampleCount;k++){
+            const t=k/samplerRate;
+            if(t>duration+1e-12)break;
+            const raw=Math.sin(2*Math.PI*samplerFrequency*t);
+            sampleData.push({t,x:xFor(t),raw,q:quantizeSample(raw,samplerBits)});
+        }
+        // Keep all points at low sample rates, but thin dense 44.1-kHz examples so markers stay visible.
+        const stride=Math.max(1,Math.ceil(sampleData.length/100));
+
+        // 2) Discrete quantised samples: stems from zero to the quantised sample value.
+        ctx.strokeStyle='rgba(245,158,11,0.48)'; ctx.lineWidth=1;
+        for(let i=0;i<sampleData.length;i+=stride){
+            const item=sampleData[i], base=cyFor(1,0), y=cyFor(1,item.q);
+            ctx.beginPath();ctx.moveTo(item.x,base);ctx.lineTo(item.x,y);ctx.stroke();
+            ctx.beginPath();ctx.arc(item.x,y,3.0,0,Math.PI*2);ctx.fillStyle='#f59e0b';ctx.fill();
+        }
+
+        // 3) Zero-order-hold reconstruction: each quantised sample is held until the next sample.
+        if(sampleData.length){
+            ctx.beginPath();
+            let firstY=cyFor(2,sampleData[0].q);
+            ctx.moveTo(left,firstY);
+            for(let i=0;i<sampleData.length;i++){
+                const item=sampleData[i], x=item.x, y=cyFor(2,item.q);
+                if(i===0)ctx.lineTo(x,y);
+                else { ctx.lineTo(x,cyFor(2,sampleData[i-1].q)); ctx.lineTo(x,y); }
+            }
+            ctx.lineTo(right,cyFor(2,sampleData[sampleData.length-1].q));
+            ctx.strokeStyle='#22d3ee'; ctx.lineWidth=2.2; ctx.stroke();
+        }
+
+        // Label four periods and give the student the live numerical settings.
+        ctx.font='10px "Space Mono"'; ctx.fillStyle='#94a3b8'; ctx.textAlign='center';
+        for(let tick=0;tick<=4;tick++){
+            const x=left+plotW*tick/4;
+            ctx.fillText(tick===0?'0':`${tick}T`,x,h-7);
+        }
+        const summary=$('ds_samplerSummary');
+        if(summary)summary.textContent=`${samplerFrequency} Hz · ${(samplerRate>=1000?(samplerRate/1000).toFixed(samplerRate%1000===0?0:1)+' kHz':samplerRate+' Hz')} · ${samplerBits}-bit · ${sampleData.length} samples / 4 cycles`;
+
+        // Moving time cursor ties the static sampling diagram to the PLAY control.
+        if(samplerPlaying){
+            const elapsed=Math.max(0,fourierAudioCtx.currentTime-samplerPlayStartedAt);
+            const t=(elapsed%duration);
+            const x=xFor(t);
+            ctx.strokeStyle='#ef4444'; ctx.lineWidth=2;
+            ctx.beginPath(); ctx.moveTo(x,top-3); ctx.lineTo(x,bottom); ctx.stroke();
+            ctx.fillStyle='#ef4444'; ctx.beginPath(); ctx.moveTo(x-5,top-3); ctx.lineTo(x+5,top-3); ctx.lineTo(x,top+5); ctx.closePath(); ctx.fill();
+        }
+    }
+
+    function animateSamplerPlayhead(){
+        if(!samplerPlaying)return;
+        if($('samplerTab').classList.contains('active'))drawSampler();
+        requestAnimationFrame(animateSamplerPlayhead);
+    }
+
+    async function startSampler() {
+        await ensureAudioContext();
+        samplerOscillator=fourierAudioCtx.createOscillator();
+        samplerOscillator.type='sine';
+        samplerOscillator.frequency.value=samplerFrequency;
+        samplerProcessor=fourierAudioCtx.createScriptProcessor(2048,1,1);
+        let samplePhase=0, heldValue=0;
+        samplerProcessor.onaudioprocess=(event)=>{
+            const input=event.inputBuffer.getChannelData(0);
+            const output=event.outputBuffer.getChannelData(0);
+            const ratio=fourierAudioCtx.sampleRate/samplerRate;
+            for (let i=0;i<output.length;i++) {
+                samplePhase+=1;
+                if (samplePhase>=ratio) {
+                    samplePhase-=ratio;
+                    heldValue=quantizeSample(input[i],samplerBits);
+                }
+                output[i]=heldValue;
+            }
+        };
+        samplerOscillator.connect(samplerProcessor);
+        samplerProcessor.connect(fourierAudioCtx.destination);
+        samplerOscillator.start();
+        samplerPlayStartedAt=fourierAudioCtx.currentTime;
+        samplerPlaying=true;
+        drawSampler();
+        requestAnimationFrame(animateSamplerPlayhead);
+        $('ds_samplerPlayBtn').textContent='■ STOP SAMPLED TONE';
+        $('ds_samplerPlayBtn').classList.add('danger');
+    }
+    function stopSampler() {
+        if (samplerOscillator) {
+            try { samplerOscillator.stop(); } catch(e) {}
+            try { samplerOscillator.disconnect(); } catch(e) {}
+            samplerOscillator=null;
+        }
+        if (samplerProcessor) {
+            samplerProcessor.onaudioprocess=null;
+            try { samplerProcessor.disconnect(); } catch(e) {}
+            samplerProcessor=null;
+        }
+        samplerPlaying=false;
+        drawSampler();
+        if ($('ds_samplerPlayBtn')) {
+            $('ds_samplerPlayBtn').textContent='▶ PLAY SAMPLED TONE';
+            $('ds_samplerPlayBtn').classList.remove('danger');
+        }
+    }
+    $('ds_samplerPlayBtn').addEventListener('click',()=>samplerPlaying?stopSampler():startSampler().catch(err=>alert(`Sampler audio could not start: ${err.message}`)));
+
+
+
+    // ---------- Melody Studio: sequencer, timbres, presets and optional MIDI ----------
+    const melodyFrequencies = {
+        'B1': 61.74, 'C2': 65.41, 'Db2': 69.30, 'D2': 73.42, 'Eb2': 77.78, 'E2': 82.41, 'F2': 87.31, 'Gb2': 92.50, 'G2': 98.00, 'Ab2': 103.83, 'A2': 110.00, 'Bb2': 116.54, 'B2': 123.47,
+        'C3': 130.81, 'Db3': 138.59, 'D3': 146.83, 'Eb3': 155.56, 'E3': 164.81, 'F3': 174.61, 'Gb3': 185.00, 'G3': 196.00, 'Ab3': 207.65, 'A3': 220.00, 'Bb3': 233.08, 'B3': 246.94,
+        'C4': 261.63, 'Db4': 277.18, 'D4': 293.66, 'Eb4': 311.13, 'E4': 329.63, 'F4': 349.23, 'Gb4': 369.99, 'G4': 392.00, 'Ab4': 415.30, 'A4': 440.00, 'Bb4': 466.16, 'B4': 493.88,
+        'C5': 523.25, 'Db5': 554.37, 'D5': 587.33, 'Eb5': 622.25, 'E5': 659.25, 'F5': 698.46, 'Gb5': 739.99, 'G5': 783.99, 'Ab5': 830.61, 'A5': 880.00, 'Bb5': 932.33, 'B5': 987.77,
+        'C6': 1046.50,
+        'Rest': null
+    };
+    const melodySequences = {
+        twinkle: [
+            {n:'C4', d:2}, {n:'C4', d:2}, {n:'G4', d:2}, {n:'G4', d:2}, {n:'A4', d:2}, {n:'A4', d:2}, {n:'G4', d:4},
+            {n:'F4', d:2}, {n:'F4', d:2}, {n:'E4', d:2}, {n:'E4', d:2}, {n:'D4', d:2}, {n:'D4', d:2}, {n:'C4', d:4}, {n:'Rest', d:4}
+        ],
+        coffindance: [
+            // The full Astronomia drop hook
+            {n:'F4', d:2}, {n:'F4', d:2}, {n:'F4', d:2}, {n:'F4', d:2}, {n:'C5', d:4}, {n:'Bb4', d:4}, {n:'Ab4', d:4},
+            {n:'G4', d:2}, {n:'G4', d:2}, {n:'G4', d:2}, {n:'G4', d:2}, {n:'Bb4', d:4}, {n:'Ab4', d:2}, {n:'G4', d:2},
+            {n:'F4', d:2}, {n:'F4', d:2}, {n:'F4', d:2}, {n:'F4', d:2}, {n:'C5', d:4}, {n:'Bb4', d:4}, {n:'Ab4', d:4},
+            {n:'G4', d:2}, {n:'G4', d:2}, {n:'G4', d:2}, {n:'G4', d:2}, {n:'Bb4', d:4}, {n:'Ab4', d:2}, {n:'G4', d:2}
+        ],
+        turnlights: [
+            // KATO ft. Jon drop / Davie504 Bassline
+            {n:'E3', d:2}, {n:'D3', d:2}, {n:'E3', d:4}, {n:'G3', d:2}, {n:'E3', d:2}, {n:'D3', d:2}, {n:'C3', d:2},
+            {n:'D3', d:2}, {n:'C3', d:2}, {n:'D3', d:4}, {n:'E3', d:2}, {n:'D3', d:2}, {n:'C3', d:2}, {n:'B2', d:2},
+            {n:'E3', d:2}, {n:'D3', d:2}, {n:'E3', d:4}, {n:'G3', d:2}, {n:'E3', d:2}, {n:'D3', d:2}, {n:'C3', d:2},
+            {n:'D3', d:2}, {n:'C3', d:2}, {n:'D3', d:4}, {n:'E3', d:2}, {n:'D3', d:2}, {n:'C3', d:2}, {n:'B2', d:2}
+        ],
+        takeonme: [
+            {n:'Gb5',d:2}, {n:'Gb5',d:2}, {n:'D5',d:2}, {n:'B4',d:2}, {n:'Rest',d:2}, {n:'B4',d:2}, {n:'Rest',d:2}, {n:'E5',d:2},
+            {n:'Rest',d:2}, {n:'E5',d:2}, {n:'E5',d:2}, {n:'Ab5',d:2}, {n:'Ab5',d:2}, {n:'A5',d:2}, {n:'B5',d:2}, {n:'A5',d:2},
+            {n:'Rest',d:2}, {n:'A5',d:2}, {n:'Rest',d:2}, {n:'E5',d:2}, {n:'D5',d:2}, {n:'Rest',d:2}, {n:'D5',d:2}, {n:'Rest',d:2},
+            {n:'Gb5',d:2}, {n:'Rest',d:2}, {n:'Gb5',d:2}, {n:'Gb5',d:2}, {n:'E5',d:2}, {n:'E5',d:2}, {n:'Gb5',d:2}, {n:'E5',d:2}
+        ],
+        axelf: [
+            {n:'F4',d:2}, {n:'Rest',d:2}, {n:'Ab4',d:3}, {n:'F4',d:1}, {n:'F4',d:1}, {n:'Bb4',d:2}, {n:'F4',d:2}, {n:'Eb4',d:2}, {n:'Rest',d:1},
+            {n:'F4',d:2}, {n:'Rest',d:2}, {n:'C5',d:3}, {n:'F4',d:1}, {n:'F4',d:1}, {n:'Db5',d:2}, {n:'C5',d:2}, {n:'Ab4',d:2}, {n:'Rest',d:1},
+            {n:'F4',d:2}, {n:'C5',d:2}, {n:'F5',d:2}, {n:'F4',d:1}, {n:'Eb4',d:2}, {n:'Eb4',d:1}, {n:'C4',d:2}, {n:'G4',d:2}, {n:'F4',d:4}, {n:'Rest',d:4}
+        ],
+        finalcountdown: [
+            {n:'Db5',d:1}, {n:'B4',d:1}, {n:'Db5',d:4}, {n:'Gb4',d:8}, {n:'Rest',d:2},
+            {n:'D5',d:1}, {n:'Db5',d:1}, {n:'D5',d:2}, {n:'Db5',d:2}, {n:'B4',d:8}, {n:'Rest',d:2},
+            {n:'D5',d:1}, {n:'Db5',d:1}, {n:'D5',d:4}, {n:'Gb4',d:8}, {n:'Rest',d:2},
+            {n:'B4',d:1}, {n:'A4',d:1}, {n:'B4',d:2}, {n:'A4',d:2}, {n:'Ab4',d:2}, {n:'B4',d:2}, {n:'A4',d:6}, {n:'Rest',d:4}
+        ],
+        pirates: [
+            {n:'A3',d:1}, {n:'C4',d:1}, {n:'D4',d:2}, {n:'D4',d:2}, {n:'D4',d:1}, {n:'E4',d:1},
+            {n:'F4',d:2}, {n:'F4',d:2}, {n:'F4',d:1}, {n:'G4',d:1}, {n:'E4',d:2}, {n:'E4',d:2},
+            {n:'D4',d:1}, {n:'C4',d:1}, {n:'D4',d:4}, {n:'Rest',d:2},
+            {n:'A3',d:1}, {n:'C4',d:1}, {n:'D4',d:2}, {n:'D4',d:2}, {n:'D4',d:1}, {n:'E4',d:1},
+            {n:'F4',d:2}, {n:'F4',d:2}, {n:'F4',d:1}, {n:'G4',d:1}, {n:'E4',d:2}, {n:'E4',d:2},
+            {n:'D4',d:1}, {n:'C4',d:1}, {n:'D4',d:4}, {n:'Rest',d:4}
+        ],
+        sevennation: [
+            // Main riff in the octave-down register used by the recording.
+            // The E-to-G movement is one slide, not two separate struck notes.
+            {n:'E2', d:6}, {n:'G2', d:4, slideFrom:'E2'}, {n:'E2', d:2}, {n:'D2', d:4}, {n:'C2', d:8}, {n:'B1', d:8},
+            // Second phrase variation.
+            {n:'E2', d:6}, {n:'G2', d:4, slideFrom:'E2'}, {n:'E2', d:2}, {n:'D2', d:4}, {n:'C2', d:4}, {n:'D2', d:4}, {n:'C2', d:4}, {n:'B1', d:4}
+        ],
+        pinkpanther: [
+            // Exact staccato pauses and chromatic walks for the brass phrasing
+            {n:'Eb4', d:2}, {n:'E4', d:6}, {n:'Rest', d:8},
+            {n:'Gb4', d:2}, {n:'G4', d:6}, {n:'Rest', d:8},
+            {n:'Eb4', d:2}, {n:'E4', d:2}, {n:'Gb4', d:2}, {n:'G4', d:2}, {n:'C5', d:4}, {n:'B4', d:4},
+            {n:'E4', d:2}, {n:'G4', d:2}, {n:'B4', d:2}, {n:'Bb4', d:6}, {n:'Rest', d:4},
+            {n:'A4', d:2}, {n:'G4', d:2}, {n:'E4', d:2}, {n:'D4', d:2}, {n:'E4', d:8}
+        ]
+    };
+    let melodyCustomSequence=[];
+    let melodyIsPlaying=false;
+    let melodyLoopEnabled=false;
+    let melodyLoopTimer=null;
+    let melodyUiTimers=[];
+    let melodyActiveOscillators=[];
+    let melodyRecordDestination=null;
+    let melodyRecorder=null;
+    let melodyRecordChunks=[];
+    let melodyRecording=false;
+    let melodyCurrentTarget='custom';
+
+    const melodyTimbres={
+        sine:       [1,0,0,0,0,0,0,0,0],
+        square:     [1,0,1/3,0,1/5,0,1/7,0,1/9],
+        triangle:   [1,0,-1/9,0,1/25,0,-1/49,0,1/81],
+        sawtooth:   [1,-1/2,1/3,-1/4,1/5,-1/6,1/7,-1/8,1/9],
+        '80s':      [1,-0.4,0.6,-0.2,0.35,-0.1,0.2,-0.05,0.1],
+        synth_brass:[1,0.35,0.70,0.25,0.50,0.18,0.35,0.12,0.25],
+        soft_lead:  [1,0,0.20,0,0.08,0,0.03,0,0.01],
+        arcade:     [1,0,0.85,0,0.45,0,0.25,0,0.15],
+        bell_pluck: [1,0,0.45,0,0.10,0,0.04,0,0.01],
+        octave_guitar: [1,0.68,0.48,0.34,0.24,0.17,0.12,0.08,0.05]
+    };
+
+    const ml=(id)=>$(id);
+    function melodyInitAudio(){
+        if(!fourierAudioCtx)fourierAudioCtx=new (window.AudioContext||window.webkitAudioContext)();
+        if(fourierAudioCtx.state==='suspended')return fourierAudioCtx.resume();
+        return Promise.resolve();
+    }
+    function melodyDurationLabel(value){return value===1?'1/16':value===2?'1/8':value===4?'1/4':value===8?'1/2':String(value);}
+    function melodyPopulateNoteSelect(){
+        const select=ml('ml_bNote');
+        const names=Object.keys(melodyFrequencies).filter(name=>name!=='Rest');
+        select.innerHTML='';
+        names.forEach(name=>{const option=document.createElement('option');option.value=name;option.textContent=name;select.appendChild(option);});
+        const rest=document.createElement('option');rest.value='Rest';rest.textContent='Rest';select.appendChild(rest);
+        select.value='C4';
+    }
+    function melodyRenderTwinkle(){
+        const container=ml('ml_twinkleVisualizer');container.innerHTML='';
+        melodySequences.twinkle.forEach((note,index)=>{
+            const chip=document.createElement('div');chip.className='ml-note-chip';chip.id=`ml_twinkle_${index}`;
+            const name=document.createElement('span');name.textContent=note.n==='Rest'?'REST':note.n;
+            const dur=document.createElement('small');dur.textContent=melodyDurationLabel(note.d);
+            chip.append(name,dur);container.appendChild(chip);
+        });
+    }
+    function melodyRenderSequence(){
+        const container=ml('ml_customMelodyDisplay');container.innerHTML='';
+        if(!melodyCustomSequence.length){const empty=document.createElement('div');empty.className='ml-status';empty.style.cssText='width:100%;text-align:center;';empty.textContent='[ SEQUENCE EMPTY ]';container.appendChild(empty);return;}
+        melodyCustomSequence.forEach((note,index)=>{
+            if(note.n==='Bar'){
+                const bar=document.createElement('div');bar.className='ml-builder-note';bar.innerHTML=`<div class="ml-note-actions"><button type="button" data-action="left" data-index="${index}">←</button><button type="button" data-action="delete" data-index="${index}">×</button><button type="button" data-action="right" data-index="${index}">→</button></div><div class="ml-bar">|</div>`;
+                container.appendChild(bar);return;
+            }
+            const card=document.createElement('div');card.className='ml-builder-note';card.dataset.index=String(index);
+            const actions=document.createElement('div');actions.className='ml-note-actions';
+            for(const [action,label] of [['left','←'],['delete','×'],['right','→']]){const btn=document.createElement('button');btn.type='button';btn.dataset.action=action;btn.dataset.index=String(index);btn.textContent=label;btn.title=action==='delete'?'Remove note':action==='left'?'Move left':'Move right';actions.appendChild(btn);}
+            const name=document.createElement('span');name.className='ml-note-name';
+            name.textContent=note.n==='Rest'?'—':(note.slideFrom?`${note.slideFrom}↗${note.n}`:note.n);
+            if(note.slideFrom){name.title=`Slide from ${note.slideFrom} to ${note.n}`;name.style.fontSize='0.68em';}
+            const duration=document.createElement('small');duration.textContent=melodyDurationLabel(note.d);
+            card.append(actions,name,duration);container.appendChild(card);
+        });
+    }
+    function melodyRenderPiano(){
+        const piano=ml('ml_pianoKeyboard');piano.innerHTML='';
+        const noteDefs=[
+            {key:'C',black:false},{key:'Db',black:true,after:'C'},{key:'D',black:false},{key:'Eb',black:true,after:'D'},
+            {key:'E',black:false},{key:'F',black:false},{key:'Gb',black:true,after:'F'},{key:'G',black:false},
+            {key:'Ab',black:true,after:'G'},{key:'A',black:false},{key:'Bb',black:true,after:'A'},{key:'B',black:false}
+        ];
+        const white=[];
+        for(const octave of [2,3,4,5]){
+            noteDefs.filter(n=>!n.black).forEach(note=>{
+                const key=document.createElement('button');key.type='button';key.className='ml-white-key';key.dataset.note=`${note.key}${octave}`;key.textContent=key.dataset.note;
+                key.addEventListener('click',()=>melodyPianoAdd(key.dataset.note,key));piano.appendChild(key);white.push({note,octave,element:key});
+            });
+        }
+        const c6=document.createElement('button');c6.type='button';c6.className='ml-white-key';c6.dataset.note='C6';c6.textContent='C6';c6.addEventListener('click',()=>melodyPianoAdd('C6',c6));piano.appendChild(c6);white.push({note:{key:'C'},octave:6,element:c6});
+        const width=window.innerWidth<=600?43:48;
+        for(const octave of [2,3,4,5]){
+            noteDefs.filter(n=>n.black).forEach(note=>{
+                const idx=white.findIndex(w=>w.note.key===note.after&&w.octave===octave);if(idx<0)return;
+                const key=document.createElement('button');key.type='button';key.className='ml-black-key';key.dataset.note=`${note.key}${octave}`;key.textContent=key.dataset.note;key.style.left=`${(idx+1)*width}px`;
+                key.addEventListener('click',()=>melodyPianoAdd(key.dataset.note,key));piano.appendChild(key);
+            });
+        }
+    }
+    function melodyTimbreCoefficients(name){return melodyTimbres[name]||melodyTimbres.sine;}
+    function melodyPlayPreview(noteName){
+        if(!melodyFrequencies[noteName])return;
+        melodyInitAudio().then(()=>melodyScheduleNote(melodyFrequencies[noteName],fourierAudioCtx.currentTime+0.025,0.20,melodyTimbreCoefficients(ml('ml_customTimbre').value)));
+    }
+    function melodyPianoAdd(noteName,keyElement){
+        ml('ml_bNote').value=noteName;
+        const duration=Number(ml('ml_bDur').value)||2;
+        melodyCustomSequence.push({n:noteName,d:duration});melodyRenderSequence();
+        melodyPlayPreview(noteName);
+        document.querySelectorAll('.ml-white-key.active,.ml-black-key.active').forEach(el=>el.classList.remove('active'));
+        if(keyElement){keyElement.classList.add('active');setTimeout(()=>keyElement.classList.remove('active'),160);}
+    }
+    function melodyScheduleNote(frequency,startTime,duration,coefficients,slideFromFrequency=null){
+        if(!fourierAudioCtx||!Number.isFinite(frequency)||frequency<=0||duration<=0)return;
+        if(!Number.isFinite(slideFromFrequency)||slideFromFrequency<=0)slideFromFrequency=null;
+        const envelope=fourierAudioCtx.createGain();
+        envelope.gain.setValueAtTime(0,startTime);
+        envelope.gain.linearRampToValueAtTime(0.34,startTime+Math.min(0.012,duration*0.2));
+        envelope.gain.setValueAtTime(0.34,Math.max(startTime+0.013,startTime+duration*0.72));
+        envelope.gain.linearRampToValueAtTime(0,startTime+duration);
+        envelope.connect(fourierAudioCtx.destination);
+        if(melodyRecordDestination)envelope.connect(melodyRecordDestination);
+        for(let i=0;i<coefficients.length;i++){
+            const coefficient=coefficients[i];if(Math.abs(coefficient)<0.005)continue;
+            const osc=fourierAudioCtx.createOscillator(),gain=fourierAudioCtx.createGain();
+            osc.type='sine';
+            const startFrequency=(slideFromFrequency||frequency)*(i+1);
+            const targetFrequency=frequency*(i+1);
+            osc.frequency.setValueAtTime(startFrequency,startTime);
+            if(slideFromFrequency && Math.abs(targetFrequency-startFrequency)>0.01){
+                osc.frequency.exponentialRampToValueAtTime(targetFrequency,startTime+Math.min(0.11,duration*0.42));
+            }
+            gain.gain.setValueAtTime(coefficient*0.19,startTime);
+            osc.connect(gain);gain.connect(envelope);
+            osc.onended=()=>{melodyActiveOscillators=melodyActiveOscillators.filter(item=>item.osc!==osc);};
+            osc.start(startTime);osc.stop(startTime+duration+0.025);
+            melodyActiveOscillators.push({osc,envelope});
+        }
+    }
+    function melodyClearUiTimers(){melodyUiTimers.forEach(timer=>clearTimeout(timer));melodyUiTimers=[];if(melodyLoopTimer){clearTimeout(melodyLoopTimer);melodyLoopTimer=null;}}
+    function stopMelodyPlayback(){
+        melodyIsPlaying=false;melodyClearUiTimers();
+        if(fourierAudioCtx){
+            const now=fourierAudioCtx.currentTime;
+            melodyActiveOscillators.forEach(item=>{try{item.envelope.gain.cancelScheduledValues(now);item.envelope.gain.setTargetAtTime(0,now,0.025);item.osc.stop(now+0.09);}catch(e){}});
+        }
+        melodyActiveOscillators=[];
+        document.querySelectorAll('.ml-note-chip.active').forEach(el=>el.classList.remove('active'));
+        ml('ml_twinkleStatus').textContent='STANDBY';
+        const play=ml('ml_playCustomBtn');play.textContent='▶ PLAY';play.classList.remove('danger');play.classList.add('success');
+        const twinkle=ml('ml_playTwinkleBtn');twinkle.textContent='▶ PLAY TWINKLE · PURE SINE';twinkle.classList.remove('danger');
+    }
+    function melodyScheduleSequence(sequence,target,coefficients,bpm,startOffset,onComplete){
+        const beat=60/Math.max(40,Math.min(300,bpm));
+        const sixteenth=beat/4;
+        const startTime=fourierAudioCtx.currentTime+0.08;
+        let delay=0;
+        const isTwinkle=target==='twinkle';
+        sequence.forEach((note,index)=>{
+            const duration=Math.max(0.06,(Number(note.d)||2)*sixteenth);
+            if(note.n&&note.n!=='Rest'&&note.n!=='Bar'&&melodyFrequencies[note.n]){
+                melodyScheduleNote(melodyFrequencies[note.n],startTime+delay,duration*0.88,coefficients,note.slideFrom?melodyFrequencies[note.slideFrom]:null);
+            }
+            if(note.n!=='Bar'){
+                const timer=setTimeout(()=>{
+                    document.querySelectorAll('.ml-note-chip.active').forEach(el=>el.classList.remove('active'));
+                    if(isTwinkle){
+                        const chip=ml(`ml_twinkle_${index}`);if(chip)chip.classList.add('active');
+                        ml('ml_twinkleStatus').textContent=note.n==='Rest'?'REST':`${note.n} · ${Math.round(melodyFrequencies[note.n])} Hz`;
+                    }else{
+                        const item=ml('ml_customMelodyDisplay').querySelector(`[data-index="${index}"]`);
+                        if(item)item.style.borderColor='var(--accent-primary)';
+                        setTimeout(()=>{if(item)item.style.borderColor='var(--border-dim)';},Math.max(100,duration*800));
+                    }
+                },Math.max(0,(delay+0.06)*1000));melodyUiTimers.push(timer);
+            }
+            delay+=note.n==='Bar'?0:duration;
+        });
+        const totalMs=(delay+0.14)*1000;
+        const endTimer=setTimeout(()=>{
+            if(isTwinkle){document.querySelectorAll('.ml-note-chip.active').forEach(el=>el.classList.remove('active'));ml('ml_twinkleStatus').textContent='STANDBY';}
+            if(target==='custom'&&melodyLoopEnabled&&melodyIsPlaying){melodyUiTimers=[];melodyScheduleSequence(sequence,target,coefficients,bpm,startOffset,onComplete);return;}
+            melodyIsPlaying=false;melodyUiTimers=[];melodyActiveOscillators=[];
+            if(onComplete)onComplete();
+            if(target==='twinkle')ml('ml_playTwinkleBtn').textContent='▶ PLAY TWINKLE · PURE SINE';
+            else {ml('ml_playCustomBtn').textContent='▶ PLAY';ml('ml_playCustomBtn').classList.remove('danger');ml('ml_playCustomBtn').classList.add('success');}
+        },totalMs);
+        melodyUiTimers.push(endTimer);
+    }
+    async function playMelodySequence(target,onComplete=null){
+        stopMelodyPlayback();
+        const isTwinkle=target==='twinkle';
+        const sequence=isTwinkle?melodySequences.twinkle:melodyCustomSequence;
+        if(!sequence.length){alert('The sequence is empty. Add notes or load a song preset first.');return;}
+        await melodyInitAudio();melodyIsPlaying=true;melodyCurrentTarget=target;
+        if(isTwinkle){ml('ml_playTwinkleBtn').textContent='■ STOP TWINKLE';ml('ml_playTwinkleBtn').classList.add('danger');}
+        else {ml('ml_playCustomBtn').textContent='■ STOP';ml('ml_playCustomBtn').classList.remove('success');ml('ml_playCustomBtn').classList.add('danger');}
+        const timbre=isTwinkle?'sine':ml('ml_customTimbre').value;
+        const bpm=isTwinkle?100:Number(ml('ml_customBPM').value)||140;
+        melodyScheduleSequence(sequence,target,melodyTimbreCoefficients(timbre),bpm,0,onComplete);
+    }
+    function melodyLoadPreset(){
+        const key=ml('ml_songTemplate').value;
+        melodyCustomSequence=melodySequences[key].map(note=>({...note}));
+        const setup={
+            takeonme:['synth_brass',169],coffindance:['square',126],turnlights:['sawtooth',128],axelf:['arcade',117],
+            finalcountdown:['synth_brass',118],pirates:['soft_lead',130],sevennation:['octave_guitar',124],pinkpanther:['synth_brass',116]
+        }[key]||['80s',120];
+        ml('ml_customTimbre').value=setup[0];ml('ml_customBPM').value=setup[1];
+        melodyLoopEnabled=true;melodyUpdateLoopButton();melodyRenderSequence();stopMelodyPlayback();
+    }
+    function melodyUpdateLoopButton(){
+        const btn=ml('ml_loopBtn');btn.textContent=melodyLoopEnabled?'🔁 LOOP: ON':'🔁 LOOP: OFF';
+        btn.classList.toggle('success',melodyLoopEnabled);btn.classList.toggle('secondary',!melodyLoopEnabled);
+    }
+    function melodyAddNote(){melodyCustomSequence.push({n:ml('ml_bNote').value,d:Number(ml('ml_bDur').value)||2});melodyRenderSequence();}
+    function melodyRenderAction(event){
+        const btn=event.target.closest('button[data-action]');if(!btn)return;
+        const index=Number(btn.dataset.index),action=btn.dataset.action;if(!Number.isInteger(index)||index<0||index>=melodyCustomSequence.length)return;
+        if(action==='delete')melodyCustomSequence.splice(index,1);
+        else {const next=index+(action==='left'?-1:1);if(next<0||next>=melodyCustomSequence.length)return;[melodyCustomSequence[index],melodyCustomSequence[next]]=[melodyCustomSequence[next],melodyCustomSequence[index]];}
+        melodyRenderSequence();
+    }
+    function melodyRecord(){
+        if(melodyRecording){stopMelodyPlayback();try{melodyRecorder.stop();}catch(e){}return;}
+        if(!melodyCustomSequence.length){alert('Add notes or load a song before recording.');return;}
+        if(!window.MediaRecorder||!fourierAudioCtx.createMediaStreamDestination){alert('Audio recording is not supported by this browser.');return;}
+        melodyInitAudio().then(()=>{
+            melodyRecordDestination=fourierAudioCtx.createMediaStreamDestination();
+            melodyRecorder=new MediaRecorder(melodyRecordDestination.stream);
+            melodyRecordChunks=[];
+            melodyRecorder.ondataavailable=(event)=>{if(event.data.size)melodyRecordChunks.push(event.data);};
+            melodyRecorder.onstop=()=>{
+                melodyRecording=false;ml('ml_recordIndicator').style.display='none';
+                const blob=new Blob(melodyRecordChunks,{type:melodyRecorder.mimeType||'audio/webm'});
+                const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='melody-studio-recording.webm';a.click();
+                setTimeout(()=>URL.revokeObjectURL(url),1500);melodyRecordDestination=null;
+            };
+            melodyRecorder.start();melodyRecording=true;ml('ml_recordIndicator').style.display='inline';
+            melodyLoopEnabled=false;melodyUpdateLoopButton();
+            playMelodySequence('custom',()=>{if(melodyRecorder&&melodyRecorder.state==='recording')melodyRecorder.stop();}).catch(err=>{if(melodyRecorder&&melodyRecorder.state==='recording')melodyRecorder.stop();alert(`Recording could not start: ${err.message}`);});
+        }).catch(err=>alert(`Recording could not start: ${err.message}`));
+    }
+    ml('ml_loadSongBtn').addEventListener('click',melodyLoadPreset);
+    ml('ml_addNoteBtn').addEventListener('click',melodyAddNote);
+    ml('ml_addBarBtn').addEventListener('click',()=>{melodyCustomSequence.push({n:'Bar',d:0});melodyRenderSequence();});
+    ml('ml_duplicateBtn').addEventListener('click',()=>{if(!melodyCustomSequence.length){alert('Add notes before duplicating the sequence.');return;}melodyCustomSequence.push(...melodyCustomSequence.map(note=>({...note})));melodyRenderSequence();});
+    ml('ml_clearBtn').addEventListener('click',()=>{stopMelodyPlayback();melodyCustomSequence=[];melodyRenderSequence();});
+    ml('ml_loopBtn').addEventListener('click',()=>{melodyLoopEnabled=!melodyLoopEnabled;melodyUpdateLoopButton();});
+    ml('ml_playTwinkleBtn').addEventListener('click',()=>{if(melodyIsPlaying&&melodyCurrentTarget==='twinkle')stopMelodyPlayback();else playMelodySequence('twinkle').catch(err=>alert(`Playback could not start: ${err.message}`));});
+    ml('ml_playCustomBtn').addEventListener('click',()=>{if(melodyIsPlaying&&melodyCurrentTarget==='custom')stopMelodyPlayback();else playMelodySequence('custom').catch(err=>alert(`Playback could not start: ${err.message}`));});
+    ml('ml_recordBtn').addEventListener('click',melodyRecord);
+    ml('ml_customMelodyDisplay').addEventListener('click',melodyRenderAction);
+    ml('ml_bDur').addEventListener('change',()=>ml('ml_pianoDurReadout').textContent=melodyDurationLabel(Number(ml('ml_bDur').value)));
+    melodyPopulateNoteSelect();melodyRenderTwinkle();melodyRenderPiano();melodyRenderSequence();melodyUpdateLoopButton();
+    window.addEventListener('resize',melodyRenderPiano);
+
+    // Optional MIDI input. The piano remains fully usable without MIDI hardware.
+    const melodyMidiToNote={};
+    const melodyMidiNames=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+    for(let midi=36;midi<=84;midi++)melodyMidiToNote[midi]=melodyMidiNames[midi%12]+(Math.floor(midi/12)-1);
+    if(navigator.requestMIDIAccess){
+        navigator.requestMIDIAccess().then(access=>{
+            ml('ml_midiStatus').textContent='MIDI: READY · AWAITING INPUT';
+            for(const input of access.inputs.values())input.onmidimessage=melodyOnMIDIMessage;
+            access.onstatechange=event=>{if(event.port.type==='input'){ml('ml_midiStatus').textContent=event.port.state==='connected'?'MIDI: CONNECTED':'MIDI: DISCONNECTED';if(event.port.state==='connected')event.port.onmidimessage=melodyOnMIDIMessage;}};
+        }).catch(()=>ml('ml_midiStatus').textContent='MIDI: PERMISSION BLOCKED');
+    }else ml('ml_midiStatus').textContent='MIDI: NOT SUPPORTED · USE ON-SCREEN KEYS';
+    function melodyOnMIDIMessage(event){
+        const [status,note,velocity]=event.data;
+        if((status&0xf0)===0x90&&velocity>0){const name=melodyMidiToNote[note];if(name){const key=ml('ml_pianoKeyboard').querySelector(`[data-note="${name}"]`);if(key)melodyPianoAdd(name,key);}}
+    }
+
+
+    window.refreshSamplerDisplay = function(){ samplerDims = resizeCanvas('ds_samplerCanvas') || samplerDims; drawSampler(); };
+
+    // Called by the parent tab controller before leaving a Fourier/digital-audio tab.
+    window.stopFourierModules = function() {
+        stopSynth();
+        stopMelodyPlayback();
+        if (melodyRecording && melodyRecorder && melodyRecorder.state==='recording') { try { melodyRecorder.stop(); } catch(e) {} }
+        if (analyzerElement && !analyzerElement.paused) analyzerElement.pause();
+        analyzerPlaying=false;
+        stopSampler();
+    };
+
+    window.addEventListener('pagehide', (event) => {
+        window.stopFourierModules();
+        if (!event.persisted) {
+            if (analyzerFileUrl) { URL.revokeObjectURL(analyzerFileUrl); analyzerFileUrl = null; }
+            if (fourierAudioCtx && fourierAudioCtx.state !== 'closed') fourierAudioCtx.close().catch(() => {});
+        }
+    });
+
+    window.addEventListener('resize',resizeFourierCanvases);
+    // Initial layout pass; hidden tabs are resized on activation and one animation frame later.
+    resizeFourierCanvases();
+    requestAnimationFrame(resizeFourierCanvases);
+    updateSamplerWarning();
+})();
+</script>
+
 </body>
 </html>
