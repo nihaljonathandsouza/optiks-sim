@@ -75,6 +75,7 @@
         .math-box-title { color: var(--text-muted); margin-bottom: 8px; font-size: 0.9em; text-transform: uppercase; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;}
         .matrix-row { display: flex; justify-content: space-between; margin: 4px 0; }
         .intensity-calc { color: var(--text-muted); margin-top: 10px; border-top: 1px dashed var(--border-dim); padding-top: 8px; font-size: 0.95em; line-height: 1.5; }
+        .model-note { color: var(--text-muted); font-size: 0.82em; line-height: 1.45; margin: -5px 0 15px 0; }
 
         .theory-block { margin-bottom: 20px; background: var(--bg-panel); border-left: 3px solid var(--border-dim); padding: 12px 15px; }
         .theory-block:last-child { margin-bottom: 0; }
@@ -107,7 +108,7 @@
 
         <!-- Automated Demo Presets -->
         <div style="margin-top: 15px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; padding-top: 15px; border-top: 1px dashed var(--border-dim);">
-            <div style="width: 100%; text-align: center; color: var(--text-muted); font-size: 0.8em; font-family: 'Space Mono', monospace; margin-bottom: 5px;">> AUTOMATED PRESENTATION (5&deg; / sec)</div>
+            <div style="width: 100%; text-align: center; color: var(--text-muted); font-size: 0.8em; font-family: 'Space Mono', monospace; margin-bottom: 5px;">> AUTOMATED PRESENTATION (5&deg;/s AVERAGE; EASED MOTION)</div>
             <button class="action-btn preset" onclick="applyPreset('linear', this)">LINEAR ROTATION (HWP)</button>
             <button class="action-btn preset" onclick="applyPreset('elliptical', this)">ELLIPTICAL (QWP)</button>
             <button class="action-btn preset" onclick="applyPreset('circular', this)">PERFECT CIRCULAR (QWP)</button>
@@ -164,6 +165,7 @@
     <div class="info-panel">
         <div class="math-side">
             <h3>Jones Vector Analytics</h3>
+            <p class="model-note">Intensity percentages are measured relative to the original unpolarized input. The Jones-vector components track the transmitted electric-field amplitudes; ideal wave plates change relative phase, not intensity.</p>
             <div class="math-grid">
                 <div class="math-box" style="border-color: var(--stage1)">
                     <div class="math-box-title" style="color: var(--stage1)">Stage 1 Vector</div>
@@ -171,7 +173,7 @@
                     <div class="matrix-row"><span>Ey:</span><span id="v1y">0.00</span></div>
                     <div class="intensity-calc" id="calc1">
                         <strong>Unpolarized &rarr; Linear:</strong><br>
-                        Averaging Malus's law &lang;cos&sup2;&theta;&rang; over all random input waves perfectly halves the intensity.<br>
+                        An ideal linear polarizer transmits half the intensity of unpolarized incident light. The transmitted field is represented by a normalized Jones state; intensity is tracked separately.<br>
                         I = 100% &times; 0.5 = <span style="color: var(--stage1)">50.0%</span>
                     </div>
                 </div>
@@ -204,13 +206,13 @@
 
             <div class="theory-block" style="border-color: var(--accent-warning);">
                 <strong style="color: var(--accent-warning);">> The 3-Polarizer "Paradox"</strong>
-                <p>This is historically called a paradox, but it perfectly follows the rules of vector projection. If you cross two polarizers at 0&deg; and 90&deg;, 100% of the light is blocked because a vertical wave has zero horizontal components. However, if you insert a third polarizer <em>between</em> them at 45&deg;, the first vertical wave is forced to project itself diagonally. This new diagonal wave now possesses a horizontal component, allowing exactly 12.5% of the original light to successfully slip through the final 90&deg; filter!</p>
+                <p>This is sometimes called a paradox, but it follows directly from vector projection. Take 0&deg; as the horizontal x-axis and 90&deg; as the vertical y-axis. Two crossed ideal polarizers at 0&deg; and 90&deg; transmit zero light: the first produces horizontal polarization, which the second blocks. Insert a third polarizer between them at 45&deg;: it transmits half of the intensity emerging from the first polarizer, and the final 90&deg; polarizer transmits half again. Starting with unpolarized light, the result is 50% &times; 50% &times; 50% = <strong>12.5% of the original intensity</strong>.</p>
             </div>
 
             <div class="theory-block" style="border-color: var(--stage2);">
                 <strong>> Fast Axis vs. Transmission Axis</strong>
-                <p><strong>Polarizers</strong> have a <em>Transmission Axis</em>. They absorb any electric field vector perpendicular to this line.<br>
-                <strong>Waveplates</strong> have a <em>Fast Axis</em>. They are made from birefringent crystals where light traveling along the Fast Axis moves slightly faster than on the orthogonal Slow Axis. Because these axes are physically locked 90&deg; apart inside the crystal lattice, changing the Fast Axis slider automatically rotates the entire physical crystal.</p>
+                <p><strong>Polarizers</strong> have a <em>Transmission Axis</em>. They transmit the electric-field component parallel to this axis and absorb the perpendicular component.<br>
+                <strong>Wave plates</strong> have mutually perpendicular <em>Fast</em> and <em>Slow</em> axes. The component along the fast axis accumulates less phase than the component along the slow axis. In this simulation, the selected angle is the fast-axis angle, measured from horizontal (0&deg;). Using the phasor convention <em>E = Re{E<sub>0</sub>e<sup>i(kz&minus;&omega;t)</sup>}</em>, the orthogonal slow-axis component receives a positive relative phase retardance &delta;. This is the phase convention used by the Jones matrix below.</p>
             </div>
         </div>
     </div>
@@ -285,28 +287,58 @@
         return [v0, v1];
     }
 
+    // Normalized Stokes parameters make the state classification independent of
+    // the absolute field amplitude (important after several polarizers).
+    function getNormalizedStokes(Ex, Ey) {
+        const Ax = Ex.mag(), Ay = Ey.mag();
+        const s0 = Ax * Ax + Ay * Ay;
+        if (s0 < 1e-15) return { s0: 0, s1: 0, s2: 0, s3: 0 };
+
+        const phaseDiff = Ey.arg() - Ex.arg();
+        return {
+            s0,
+            s1: (Ax * Ax - Ay * Ay) / s0,
+            s2: (2 * Ax * Ay * Math.cos(phaseDiff)) / s0,
+            s3: (2 * Ax * Ay * Math.sin(phaseDiff)) / s0
+        };
+    }
+
     function getTiltAngle(Ex, Ey) {
-        let Ax = Ex.mag(), Ay = Ey.mag();
-        if (Ax < 0.001 && Ay < 0.001) return 0;
-        if (Ax < 0.001) return 90;
-        if (Ay < 0.001) return 0;
-        let phaseDiff = Ey.arg() - Ex.arg();
-        let num = 2 * Ax * Ay * Math.cos(phaseDiff);
-        let den = Ax * Ax - Ay * Ay;
-        let psi = 0.5 * Math.atan2(num, den);
-        let deg = psi * 180 / Math.PI;
+        const stokes = getNormalizedStokes(Ex, Ey);
+        if (stokes.s0 < 1e-15) return null;
+        // For circular polarization the ellipse is a circle, so its major-axis
+        // orientation is undefined. Avoid reporting an arbitrary angle of 0°.
+        if (Math.abs(stokes.s1) < 0.02 && Math.abs(stokes.s2) < 0.02) return null;
+
+        const Ax = Ex.mag(), Ay = Ey.mag();
+        const phaseDiff = Ey.arg() - Ex.arg();
+        const num = 2 * Ax * Ay * Math.cos(phaseDiff);
+        const den = Ax * Ax - Ay * Ay;
+        let deg = 0.5 * Math.atan2(num, den) * 180 / Math.PI;
         if (deg < 0) deg += 180;
         return deg;
     }
 
     function determineState(Ex, Ey, intensity) {
-        if (intensity < 0.001) return "Blocked (0%)";
-        let phaseDiff = Math.abs(Ex.arg() - Ey.arg()) % Math.PI;
-        if (phaseDiff > Math.PI/2) phaseDiff = Math.PI - phaseDiff;
-        let Ax = Ex.mag(), Ay = Ey.mag();
-        if (Ax < 0.01 || Ay < 0.01 || phaseDiff < 0.1 || Math.abs(phaseDiff - Math.PI) < 0.1) return "Linear Polarization";
-        else if (Math.abs(phaseDiff - Math.PI/2) < 0.1 && Math.abs(Ax - Ay) < 0.05) return "Circular Polarization";
-        else return "Elliptical Polarization";
+        if (intensity < 0.001) return "Blocked (~0%)";
+        const stokes = getNormalizedStokes(Ex, Ey);
+        if (stokes.s0 < 1e-15) return "Blocked (~0%)";
+
+        // The small tolerance allows for floating-point round-off and slider
+        // precision while keeping classification based on relative polarization.
+        const tolerance = 0.02;
+        if (Math.abs(stokes.s3) <= tolerance) return "Linear Polarization";
+        if (Math.abs(stokes.s1) <= tolerance && Math.abs(stokes.s2) <= tolerance) return "Circular Polarization";
+        return "Elliptical Polarization";
+    }
+
+    function getOrientationLabel(Ex, Ey, intensity) {
+        const state = determineState(Ex, Ey, intensity);
+        if (state.includes("Blocked")) return "Orientation: —";
+        if (state.includes("Circular")) return "Orientation: undefined";
+        const angle = getTiltAngle(Ex, Ey);
+        if (angle === null) return "Orientation: —";
+        return `${state.includes("Elliptical") ? "Major axis" : "Axis"}: ${angle.toFixed(1)}°`;
     }
 
     // --- Physics Calculation ---
@@ -334,7 +366,7 @@
                 if (relAngle > 90) relAngle = 180 - relAngle;
                 calc2Text = `<strong>Malus's Law:</strong><br>&Delta;&theta; = |${ang2.toFixed(1)}&deg; - ${prevAngle.toFixed(1)}&deg;| = ${relAngle.toFixed(1)}&deg;<br>I = ${(int1*100).toFixed(1)}% &times; cos&sup2;(${relAngle.toFixed(1)}&deg;)<br>&nbsp;= <span style="color: var(--stage2)">${(int2*100).toFixed(1)}%</span>`;
             } else {
-                calc2Text = `<strong>Waveplate Phase Shift:</strong><br>100% Transmission.<br>I = <span style="color: var(--stage2)">${(int2*100).toFixed(1)}%</span>`;
+                calc2Text = `<strong>Ideal wave plate:</strong><br>No intensity loss; only the relative phase changes.<br>I<sub>out</sub> = I<sub>in</sub> = <span style="color: var(--stage2)">${(int2*100).toFixed(1)}%</span> of original`;
             }
         }
 
@@ -353,10 +385,10 @@
                     if (relAngle > 90) relAngle = 180 - relAngle;
                     calc3Text = `<strong>Malus's Law:</strong><br>&Delta;&theta; = |${ang3.toFixed(1)}&deg; - ${prevAngle.toFixed(1)}&deg;| = ${relAngle.toFixed(1)}&deg;<br>I = ${(int2*100).toFixed(1)}% &times; cos&sup2;(${relAngle.toFixed(1)}&deg;)<br>&nbsp;= <span style="color: var(--stage3)">${(int3*100).toFixed(1)}%</span>`;
                 } else {
-                    calc3Text = `<strong>Polarizer Filtering:</strong><br>Absorbing orthogonal components of a non-linear wave.<br>I &rarr; <span style="color: var(--stage3)">${(int3*100).toFixed(1)}%</span>`;
+                    calc3Text = `<strong>Jones-vector projection:</strong><br>The polarizer transmits the field component parallel to its transmission axis and removes the perpendicular component.<br>I &rarr; <span style="color: var(--stage3)">${(int3*100).toFixed(1)}%</span>`;
                 }
             } else {
-                calc3Text = `<strong>Waveplate Phase Shift:</strong><br>100% Transmission.<br>I = <span style="color: var(--stage3)">${(int3*100).toFixed(1)}%</span>`;
+                calc3Text = `<strong>Ideal wave plate:</strong><br>No intensity loss; only the relative phase changes.<br>I<sub>out</sub> = I<sub>in</sub> = <span style="color: var(--stage3)">${(int3*100).toFixed(1)}%</span> of original`;
             }
         }
 
@@ -395,7 +427,7 @@
             ctx.fillText("0% INTENSITY", cx, cy - 100); return;
         }
         let Ax = Ex.mag(), phix = Ex.arg(); let Ay = Ey.mag(), phiy = Ey.arg();
-        let scale = Math.min(80 * Math.sqrt(intensity / 0.5), 120);
+        let scale = 80;
 
         ctx.beginPath();
         for (let t = 0; t <= Math.PI * 2.05; t += 0.05) {
@@ -415,9 +447,9 @@
         ctx.beginPath(); ctx.arc(currentX, currentY, 4, 0, Math.PI*2);
         ctx.fillStyle = color; ctx.fill();
 
-        let tilt = getTiltAngle(Ex, Ey);
+        const orientationLabel = getOrientationLabel(Ex, Ey, intensity);
         ctx.fillStyle = color; ctx.font = '11px "Space Mono"'; ctx.textAlign = 'center';
-        ctx.fillText(`Angle: ${tilt.toFixed(1)}\xB0`, cx, cy - 100);
+        ctx.fillText(orientationLabel, cx, cy - 100);
     }
 
     function draw3DWave(cx, cy, Ex, Ey, intensity, color) {
@@ -427,7 +459,7 @@
         }
 
         let Ax = Ex.mag(), phix = Ex.arg(); let Ay = Ey.mag(), phiy = Ey.arg();
-        let scale = 75 * Math.sqrt(intensity / 0.5); let k = 0.08;
+        let scale = 75; let k = 0.08;
 
         ctx.beginPath();
         ctx.moveTo(cx - 80, cy - 70); ctx.lineTo(cx - 80, cy + 70);
@@ -459,9 +491,9 @@
         }
         ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke();
 
-        let tilt = getTiltAngle(Ex, Ey);
+        const orientationLabel = getOrientationLabel(Ex, Ey, intensity);
         ctx.fillStyle = color; ctx.font = '11px "Space Mono"'; ctx.textAlign = 'center';
-        ctx.fillText(`Angle: ${tilt.toFixed(1)}\xB0`, cx, cy - 100);
+        ctx.fillText(orientationLabel, cx, cy - 100);
     }
 
     function drawFrontWave(cx, cy, Ex, Ey, intensity, color) {
@@ -471,7 +503,7 @@
         }
 
         let Ax = Ex.mag(), phix = Ex.arg(); let Ay = Ey.mag(), phiy = Ey.arg();
-        let baseScale = 60 * Math.sqrt(intensity / 0.5);
+        let baseScale = 60;
         let k = 0.08;
 
         ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.beginPath();
@@ -505,9 +537,9 @@
         ctx.beginPath(); ctx.arc(cx + tipX, cy - tipY, 4, 0, Math.PI*2);
         ctx.fillStyle = color; ctx.fill();
 
-        let tilt = getTiltAngle(Ex, Ey);
+        const orientationLabel = getOrientationLabel(Ex, Ey, intensity);
         ctx.fillStyle = color; ctx.font = '11px "Space Mono"'; ctx.textAlign = 'center';
-        ctx.fillText(`Angle: ${tilt.toFixed(1)}\xB0`, cx, cy - 100);
+        ctx.fillText(orientationLabel, cx, cy - 100);
     }
 
     function renderLoop() {
