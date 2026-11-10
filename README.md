@@ -72,8 +72,6 @@ The dashboard currently links to these filenames:
 - `polarization.html`
 - `anc.html`
 
-To keep `index.html` unchanged, save the final combined Wave, Fourier & Melody Laboratory as **`anc.html`**. If you prefer to keep the filename `wave_fourier_lab_v3.html`, update the acoustics card link in `index.html` to point to that filename.
-
 Most visual simulations can run locally in a modern browser. The microphone feature requires a secure context (HTTPS or localhost), a compatible browser and the user's permission. A local web server is therefore recommended rather than opening the HTML file directly with `file://`.
 
 ## Audio and External Resources
