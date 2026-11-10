@@ -17,7 +17,7 @@ An idealised eye model for exploring image formation and optical correction.
 
 **Model limitation:** This is a paraxial reduced-eye teaching model. It does not trace refraction through every anatomical surface of a real eye and must not be used to determine a clinical prescription.
 
-### Module 02: Physical Optics
+### Module 02: Physical Optics Lab
 
 Interactive demonstrations of diffraction and interference patterns.
 
