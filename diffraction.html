@@ -28,6 +28,14 @@
         .back-link:hover { color: var(--text-main); border-color: var(--text-main); }
 
         .setup-tracker { background: rgba(0, 240, 255, 0.05); border: 1px dashed var(--border-main); padding: 10px 15px; margin-bottom: 20px; font-family: 'Space Mono', monospace; font-size: 0.85em; color: var(--text-data); text-align: center; letter-spacing: 0.5px; }
+        .setup-schematic { display: block; width: 100%; max-width: 680px; height: auto; margin: 0 auto; }
+        .setup-schematic text { font-family: 'Space Mono', monospace; font-size: 10px; fill: var(--text-muted); letter-spacing: 0; }
+        .setup-schematic .beam { stroke: #fbbf24; stroke-width: 1.6; fill: none; }
+        .setup-schematic .axis { stroke: var(--border-dim); stroke-width: 1; stroke-dasharray: 3 4; }
+        .setup-schematic .aperture { stroke: var(--accent-primary); stroke-width: 4; fill: none; }
+        .setup-schematic .screen { stroke: var(--text-muted); stroke-width: 2; fill: rgba(148,163,184,0.08); }
+        .setup-schematic .pattern-mark { stroke: #fbbf24; fill: none; stroke-width: 1.5; }
+        @media (max-width: 520px) { .setup-schematic { max-width: 100%; } }
 
         .visual-dashboard { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
         @media (min-width: 900px) { .visual-dashboard { grid-template-columns: 1.8fr 1fr; } }
@@ -87,24 +95,64 @@
         <a href="index.html" class="back-link">&larr; Return to Dashboard</a>
     </div>
 
-    <div class="setup-tracker">
-        [LIGHT SOURCE: Collimated Plane Waves] &rarr; [APERTURE] &rarr; [PROJECTION SCREEN (1.0 m)]
+    <div class="setup-tracker" aria-label="Schematic of the diffraction experiment">
+        <svg class="setup-schematic" viewBox="0 0 680 78" role="img" aria-labelledby="setupTitle setupDesc">
+            <title id="setupTitle">Diffraction experiment arrangement</title>
+            <desc id="setupDesc">Parallel light rays travel from left to right through an aperture and form a diffraction pattern on a screen one metre away.</desc>
+            <!-- Collimated incident beam -->
+            <text x="12" y="12">COLLIMATED LIGHT</text>
+            <path class="beam" d="M18 25 H250 M18 39 H250 M18 53 H250"/>
+            <path d="M242 21 L250 25 L242 29 M242 35 L250 39 L242 43 M242 49 L250 53 L242 57" stroke="#fbbf24" stroke-width="1.4" fill="none"/>
+            <text x="22" y="70">PLANE-WAVEFRONT BEAM</text>
+
+            <!-- Aperture plane: the visible opening changes with the selected mode -->
+            <g id="diagram-single">
+                <path class="aperture" d="M270 9 V31 M270 47 V69"/>
+                <text x="270" y="13" text-anchor="middle">SINGLE SLIT</text>
+            </g>
+            <g id="diagram-double" style="display:none">
+                <path class="aperture" d="M270 9 V22 M270 30 V48 M270 56 V69"/>
+                <text x="270" y="13" text-anchor="middle">DOUBLE SLIT</text>
+            </g>
+            <g id="diagram-circular" style="display:none">
+                <path class="aperture" d="M270 9 V23 M270 55 V69"/>
+                <circle cx="270" cy="39" r="12" stroke="#00f0ff" stroke-width="2" fill="#111116"/>
+                <text x="270" y="13" text-anchor="middle">CIRCULAR</text>
+            </g>
+
+            <!-- Schematic spreading after the aperture -->
+            <path class="beam" d="M280 39 L548 17 M280 39 H548 M280 39 L548 61" opacity="0.75"/>
+            <path class="axis" d="M8 39 H562"/>
+
+            <!-- Observation screen and indicative pattern -->
+            <rect class="screen" x="557" y="8" width="13" height="62" rx="2"/>
+            <g id="screen-pattern-slits">
+                <path class="pattern-mark" d="M560 39 H567 M561 29 H566 M561 49 H566 M562 21 H565 M562 57 H565"/>
+            </g>
+            <g id="screen-pattern-circular" style="display:none">
+                <circle class="pattern-mark" cx="563.5" cy="39" r="3"/>
+                <circle class="pattern-mark" cx="563.5" cy="39" r="7" opacity="0.8"/>
+                <circle class="pattern-mark" cx="563.5" cy="39" r="11" opacity="0.55"/>
+            </g>
+            <text x="575" y="31">SCREEN</text>
+            <text x="575" y="44">1.0 m</text>
+        </svg>
     </div>
 
     <div class="mode-selector">
         <button class="mode-btn active" data-mode="single">Single Slit</button>
         <button class="mode-btn" data-mode="double">Double Slit</button>
-        <button class="mode-btn" data-mode="circular">Circular (Pupil)</button>
+        <button class="mode-btn" data-mode="circular">Circular Aperture (Pupil)</button>
     </div>
 
     <div class="visual-dashboard">
         <div class="canvas-box">
-            <div class="canvas-label">> 1D INTENSITY PROFILE</div>
+            <div class="canvas-label" id="graphCanvasLabel">> 1D INTENSITY PROFILE</div>
             <canvas id="graphCanvas"></canvas>
             <canvas id="stripCanvas"></canvas>
         </div>
         <div class="canvas-box">
-            <div class="canvas-label">> 2D FRONT PROJECTION</div>
+            <div class="canvas-label" id="patternCanvasLabel">> 2D FRONT PROJECTION</div>
             <canvas id="patternCanvas"></canvas>
         </div>
     </div>
@@ -121,12 +169,12 @@
             <div style="text-align: right; margin-top: 5px;"><span id="waveVal" class="value-display">550 nm</span></div>
         </div>
         <div class="control-group">
-            <div class="control-header"><label>Aperture Size (a)</label></div>
-            <input type="range" id="slitWidth" min="2" max="60" step="1" value="20" title="Slide to adjust the physical size of the opening">
+            <div class="control-header"><label id="apertureLabel">Slit Width (a)</label></div>
+            <input type="range" id="slitWidth" min="2" max="60" step="1" value="20" title="Adjust the slit width in micrometres">
             <div style="text-align: right; margin-top: 5px;"><span id="slitWidthVal" class="value-display">20 &mu;m</span></div>
         </div>
         <div class="control-group disabled" id="sepControl">
-            <div class="control-header"><label>Slit Separation (d)</label></div>
+            <div class="control-header"><label>Slit Centre-to-Centre Separation (d)</label></div>
             <input type="range" id="slitSep" min="40" max="250" step="1" value="100" title="Slide to adjust distance between two slits">
             <div style="text-align: right; margin-top: 5px;"><span id="slitSepVal" class="value-display">100 &mu;m</span></div>
         </div>
@@ -141,23 +189,26 @@
             </div>
             <div class="math-line">
                 <div class="math-label">
-                    Central Max Width (W)<br>
-                    <small id="math-formula-width" style="color: var(--text-muted); font-family: 'Space Mono', monospace;"><em>W = 2&lambda;L / a</em></small>
+                    <span id="widthLabel">Central Diffraction Envelope Width (W)</span><br>
+                    <small id="math-formula-width" style="color: var(--text-muted); font-family: 'Space Mono', monospace;"><em>W &approx; 2&lambda;L / a</em></small>
                 </div>
                 <span id="math-width" class="math-val">0.00 mm</span>
             </div>
             <div class="math-line" id="rayleigh-container" style="display:none; border-top: 1px solid var(--border-dim); padding-top: 15px; margin-top: 10px;">
                 <div class="math-label dynamic-text" style="font-weight: 700;">
                     Rayleigh Resolution (&theta;)<br>
-                    <small style="font-family: 'Space Mono', monospace;"><em>&theta; = 1.22&lambda; / a</em></small>
+                    <small style="font-family: 'Space Mono', monospace;"><em>&theta;<sub>R</sub> &approx; 1.22&lambda; / D</em></small>
                 </div>
                 <span id="math-rayleigh" class="math-val dynamic-text">0.00 mrad</span>
             </div>
 
             <!-- Dynamic Newton's Rings Reference -->
             <div id="newtons-image-box" style="display:none; margin-top: 25px; text-align: center;">
-                <div style="font-family: 'Space Mono', monospace; font-size: 0.8em; color: var(--text-muted); margin-bottom: 8px;">> LIVE SIMULATION: NEWTON'S RINGS</div>
+                <div style="font-family: 'Space Mono', monospace; font-size: 0.8em; color: var(--text-muted); margin-bottom: 8px;">> NEWTON'S RINGS: REFLECTED LIGHT, AIR FILM</div>
                 <canvas id="newtonCanvas"></canvas>
+                <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 6px; line-height: 1.4;">
+                    Separate reflected-light air-film model; lens radius of curvature R = 1.0 m and image edge = 2 mm radius. It is independent of pupil diameter; change wavelength to alter its ring spacing.
+                </div>
 
                 <!-- Real Experimental Photos Links -->
                 <div style="margin-top: 20px;">
@@ -178,18 +229,22 @@
             <div class="inquiry-box dynamic-border" id="newton-box" style="display:none;">
                 <strong class="dynamic-text">> AIRY'S DISK VS. NEWTON'S RINGS</strong>
                 The circular aperture projection looks almost identical to Newton's Rings, but the physics are completely different:<br><br>
-                &bull; <strong>Airy's Disk (Diffraction):</strong> Created by a flat wave of light squeezing through a hole. The central spot contains ~84% of the light, and the outer rings <em>fade exponentially</em> into darkness.<br>
-                &bull; <strong>Newton's Rings (Thin-Film Interference):</strong> Created by light reflecting off a microscopic air gap between a curved lens and flat glass. The outer rings do not fade exponentially; they maintain brightness but squeeze closer together.
+                &bull; <strong>Airy pattern (diffraction):</strong> Produced by Fraunhofer diffraction at an ideal circular aperture. About 84% of the transmitted energy lies inside the central disc up to its first dark ring. The outer rings become progressively weaker according to the squared Bessel-function intensity distribution; the decrease is not exponential.<br>
+                &bull; <strong>Newton's rings (thin-film interference):</strong> Produced by interference between light reflected from the two surfaces of a thin air film between a plano-convex lens and a flat plate. In this ideal reflected-light model, the centre is dark and the rings become closer together outward. This is a separate physical model from the Airy pattern.
             </div>
 
             <div class="inquiry-box dynamic-border">
-                <strong class="dynamic-text">> EXE: White Light Dispersion</strong>
-                Toggle <strong>White Light</strong> mode. Notice how the central maximum remains pure white, but the outer fringes become spectral rainbows? This happens because violet light (&lambda; &approx; 400 nm) reaches its destructive interference minimum at a smaller angle than red light (&lambda; &approx; 700 nm).
+                <strong class="dynamic-text">> EXE: White-Light Diffraction</strong>
+                Toggle <strong>White Light</strong> mode. The central maximum remains approximately white because the sampled wavelengths overlap at the centre. Away from the centre, the minima occur at different angles: shorter wavelengths (violet) reach a given diffraction minimum closer to the centre than longer wavelengths (red). The displayed spectrum is an illustrative seven-wavelength RGB approximation, not a calibrated white-light spectrum or a prism-dispersion model.
             </div>
 
             <div class="inquiry-box dynamic-border">
-                <strong class="dynamic-text">> EXE: The Aberration Trade-off</strong>
-                Switch to <strong>Circular (Pupil)</strong>. The human pupil ranges from 2 mm to 8 mm. A tiny pupil causes massive diffraction blur (Airy Disks). But a massive pupil exposes the outer edges of the cornea, causing <em>Spherical Aberrations</em>. The eye reaches peak resolution at a pupil diameter of ~3.0 mm, perfectly balancing both physical constraints.
+                <strong class="dynamic-text">> EXE: Pupil Diameter and Resolution</strong>
+                Switch to <strong>Circular Aperture (Pupil)</strong>. The control now represents pupil diameter in millimetres (2–8 mm). A smaller pupil increases diffraction blur; a larger pupil reduces diffraction but may reveal more optical aberrations in a real eye. The balance varies with the individual eye, accommodation, illumination and other conditions, so there is no single universal pupil diameter that guarantees peak resolution.
+            </div>
+            <div class="inquiry-box dynamic-border">
+                <strong class="dynamic-text">> MODEL ASSUMPTIONS</strong>
+                The slit and circular-aperture patterns use ideal Fraunhofer diffraction with a fixed 1.00 m screen distance. In circular mode, the graph and 2D pattern keep a fixed +/-1.5 mrad display field (about +/-1.5 mm on the screen), so changes in pupil diameter remain visible at the same scale. The displayed width formulas are paraxial estimates. White-light mode combines seven sampled wavelengths with a simplified RGB mapping. The Newton's-rings reference is a separate ideal reflected-light model for an air film, with a fixed 1.0 m lens radius of curvature and a displayed radial range of 0–2 mm; it is independent of pupil diameter. These are teaching models, not calibrated laboratory predictions.
             </div>
         </div>
     </div>
@@ -204,9 +259,15 @@
     const G_WIDTH = 900; const G_HEIGHT = 350;
     const S_HEIGHT = 40;
     const P_SIZE = 300;
-    const N_SIZE = 200; // Size of Newton's Ring canvas
+    const N_SIZE = 200; // CSS-pixel size of the Newton's Rings canvas
+
+    // Fixed illustrative Newton's-rings model: reflected light from an air film.
+    const NEWTON_LENS_RADIUS_M = 1.0; // plano-convex lens radius of curvature
+    const NEWTON_DISPLAY_RADIUS_M = 0.002; // canvas edge represents 2 mm from contact
 
     let currentMode = 'single';
+    let slitWidthUm = 20;
+    let pupilDiameterMm = 3.0;
 
     function initHighDPICanvases() {
         const dpr = window.devicePixelRatio || 1;
@@ -215,6 +276,8 @@
         pCanvas.width = P_SIZE * dpr; pCanvas.height = P_SIZE * dpr;
         nCanvas.width = N_SIZE * dpr; nCanvas.height = N_SIZE * dpr;
 
+        // Reset first so repeated resize events do not compound the scale factor.
+        gCtx.setTransform(1, 0, 0, 1, 0, 0);
         gCtx.scale(dpr, dpr);
     }
 
@@ -224,6 +287,8 @@
     const inputs = { wave: document.getElementById('wavelength'), width: document.getElementById('slitWidth'), sep: document.getElementById('slitSep'), white: document.getElementById('whiteLightToggle') };
     const displays = { wave: document.getElementById('waveVal'), width: document.getElementById('slitWidthVal'), sep: document.getElementById('slitSepVal'), centralWidth: document.getElementById('math-width'), rayleigh: document.getElementById('math-rayleigh'), formulaWidth: document.getElementById('math-formula-width') };
     const sepControl = document.getElementById('sepControl');
+    const apertureLabel = document.getElementById('apertureLabel');
+    const widthLabel = document.getElementById('widthLabel');
     const newtonBox = document.getElementById('newton-box');
     const newtonImage = document.getElementById('newtons-image-box');
     const modeBtns = document.querySelectorAll('.mode-btn');
@@ -240,14 +305,29 @@
         return [R * 255, G * 255, B * 255];
     }
 
+    // Bessel function of the first kind, order 1.
+    // Piecewise approximation remains stable for the larger arguments sampled
+    // when the circular-aperture view uses a fixed angular field of view.
     function j1(x) {
-        if (x === 0) return 0;
-        const steps = 30; let sum = 0;
-        for (let i = 0; i < steps; i++) {
-            let theta = (i + 0.5) * (Math.PI / steps);
-            sum += Math.cos(theta - x * Math.sin(theta));
+        const ax = Math.abs(x);
+        if (ax < 1e-12) return x / 2;
+
+        let result;
+        if (ax < 8) {
+            const y = x * x;
+            const numerator = x * (72362614232.0 + y * (-7895059235.0 + y * (242396853.1 + y * (-2972611.439 + y * (15704.48260 + y * (-30.16036606))))));
+            const denominator = 144725228442.0 + y * (2300535178.0 + y * (18583304.74 + y * (99447.43394 + y * (376.9991397 + y))));
+            result = numerator / denominator;
+        } else {
+            const z = 8 / ax;
+            const y = z * z;
+            const phase = ax - 2.356194491;
+            const p = 1 + y * (0.00183105 + y * (-0.00003516396496 + y * (0.000002457520174 - y * 0.000000240337019)));
+            const q = 0.04687499995 + y * (-0.0002002690873 + y * (0.000008449199096 + y * (-0.00000088228987 + y * 0.000000105787412)));
+            result = Math.sqrt(0.636619772 / ax) * (Math.cos(phase) * p - z * Math.sin(phase) * q);
+            if (x < 0) result = -result;
         }
-        return sum / steps;
+        return result;
     }
 
     function sinc(x) { return (x === 0) ? 1 : Math.sin(x) / x; }
@@ -268,18 +348,61 @@
         return 0;
     }
 
+    function updateSetupSchematic() {
+        const isCircular = currentMode === 'circular';
+        document.getElementById('diagram-single').style.display = currentMode === 'single' ? 'inline' : 'none';
+        document.getElementById('diagram-double').style.display = currentMode === 'double' ? 'inline' : 'none';
+        document.getElementById('diagram-circular').style.display = isCircular ? 'inline' : 'none';
+        document.getElementById('screen-pattern-slits').style.display = isCircular ? 'none' : 'inline';
+        document.getElementById('screen-pattern-circular').style.display = isCircular ? 'inline' : 'none';
+    }
+
+    function configureApertureControl() {
+        if (currentMode === 'circular') {
+            inputs.width.min = '2';
+            inputs.width.max = '8';
+            inputs.width.step = '0.1';
+            inputs.width.value = pupilDiameterMm.toFixed(1);
+            inputs.width.title = 'Adjust the idealised pupil diameter in millimetres';
+            apertureLabel.textContent = 'Pupil Diameter (D)';
+        } else {
+            inputs.width.min = '2';
+            inputs.width.max = currentMode === 'double'
+                ? String(Math.min(60, Math.max(2, Math.floor(parseFloat(inputs.sep.value) - 1))))
+                : '60';
+            inputs.width.step = '1';
+            if (slitWidthUm > parseFloat(inputs.width.max)) slitWidthUm = parseFloat(inputs.width.max);
+            inputs.width.value = String(slitWidthUm);
+            inputs.width.title = 'Adjust the slit width in micrometres';
+            apertureLabel.textContent = 'Slit Width (a)';
+        }
+    }
+
     modeBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
             modeBtns.forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-            currentMode = e.target.dataset.mode;
+            e.currentTarget.classList.add('active');
+            currentMode = e.currentTarget.dataset.mode;
 
             sepControl.classList.toggle('disabled', currentMode !== 'double');
             document.getElementById('rayleigh-container').style.display = (currentMode === 'circular') ? 'flex' : 'none';
+            document.getElementById('graphCanvasLabel').textContent = currentMode === 'circular'
+                ? '> 1D AIRY INTENSITY PROFILE (FIXED ANGULAR SCALE)'
+                : '> 1D INTENSITY PROFILE';
+            document.getElementById('patternCanvasLabel').textContent = currentMode === 'circular'
+                ? '> 2D AIRY PATTERN (FIXED SCREEN SCALE)'
+                : '> 2D FRONT PROJECTION';
             newtonBox.style.display = (currentMode === 'circular') ? 'block' : 'none';
             newtonImage.style.display = (currentMode === 'circular') ? 'block' : 'none';
-            displays.formulaWidth.innerHTML = (currentMode === 'circular') ? '<em>W = 2.44&lambda;L / a</em>' : '<em>W = 2&lambda;L / a</em>';
+            widthLabel.textContent = currentMode === 'circular'
+                ? 'Airy Disc Diameter (to first dark ring)'
+                : 'Central Diffraction Envelope Width (W)';
+            displays.formulaWidth.innerHTML = (currentMode === 'circular')
+                ? '<em>D<sub>Airy</sub> &approx; 2.44&lambda;L / D</em>'
+                : '<em>W &approx; 2&lambda;L / a</em>';
 
+            configureApertureControl();
+            updateSetupSchematic();
             draw();
         });
     });
@@ -290,25 +413,41 @@
         inputs.wave.style.pointerEvents = isWhite ? 'none' : 'auto';
 
         const lambda_nm = isWhite ? 550 : parseFloat(inputs.wave.value);
-        const a_um = parseFloat(inputs.width.value);
+        const apertureValue = parseFloat(inputs.width.value);
         const d_um = parseFloat(inputs.sep.value);
+        const isCircular = currentMode === 'circular';
+        const apertureMeters = isCircular ? apertureValue * 1e-3 : apertureValue * 1e-6;
 
-        displays.wave.textContent = isWhite ? "BROAD SPECTRUM" : `${lambda_nm} nm`;
-        displays.width.textContent = `${a_um} \u03BCm`;
+        displays.wave.textContent = isWhite ? "BROAD SPECTRUM (7 SAMPLES)" : `${lambda_nm} nm`;
+        displays.width.textContent = isCircular ? `${apertureValue.toFixed(1)} mm` : `${apertureValue.toFixed(0)} \u03BCm`;
         displays.sep.textContent = `${d_um} \u03BCm`;
 
         const uiColor = isWhite ? "#ffffff" : `rgb(${getRGBArray(lambda_nm).join(',')})`;
         document.documentElement.style.setProperty('--text-data', uiColor);
         document.documentElement.style.setProperty('--accent-primary', uiColor);
 
-        const a = a_um * 1e-6; const d = d_um * 1e-6; const L = 1.0; const maxTheta = 0.08;
+        const a = apertureMeters;
+        const d = d_um * 1e-6;
+        const L = 1.0;
         const dpr = window.devicePixelRatio || 1;
 
-        // Parameter Readouts
-        let ref_lambda = lambda_nm * 1e-9;
-        let maxWidth_mm = (currentMode === 'circular') ? (2 * 1.22 * ref_lambda * L / a) * 1000 : (2 * ref_lambda * L / a) * 1000;
-        displays.centralWidth.textContent = isWhite ? `~ ${maxWidth_mm.toFixed(1)} mm` : `${maxWidth_mm.toFixed(1)} mm`;
-        if (currentMode === 'circular') displays.rayleigh.textContent = `${((1.22 * ref_lambda / a) * 1000).toFixed(2)} mrad`;
+        // Keep a FIXED angular field of view in circular mode.
+        // If the view were rescaled to the first Airy minimum for every pupil size,
+        // the normalized pattern would look almost identical and hide the physics.
+        // A fixed +/-1.5 mrad view shows the Airy disc contracting as D increases.
+        const ref_lambda = lambda_nm * 1e-9; // 550 nm is the representative value in white-light mode.
+        let maxTheta;
+        if (isCircular) {
+            maxTheta = 0.0015; // radians; fixed screen/angular scale across pupil diameters
+        } else {
+            const firstSlitMinimum = Math.asin(Math.min(0.999999, ref_lambda / a));
+            maxTheta = Math.min(0.45, Math.max(0.08, 3.5 * firstSlitMinimum));
+        }
+
+        // Paraxial screen-width estimates at L = 1.00 m.
+        const maxWidth_mm = (isCircular ? 2 * 1.22 * ref_lambda * L / a : 2 * ref_lambda * L / a) * 1000;
+        displays.centralWidth.textContent = isWhite ? `~ ${maxWidth_mm.toFixed(2)} mm (550 nm estimate)` : `${maxWidth_mm.toFixed(2)} mm`;
+        if (isCircular) displays.rayleigh.textContent = `${((1.22 * ref_lambda / a) * 1000).toFixed(3)} mrad`;
 
         gCtx.clearRect(0,0,G_WIDTH,G_HEIGHT);
         const physSW = sCanvas.width; const physSH = sCanvas.height;
@@ -423,7 +562,7 @@
                 }
             }
 
-            // 4. DRAW NEWTON'S RINGS (Only in Circular Mode)
+            // 4. DRAW NEWTON'S RINGS (separate reflected-light thin-film model)
             const physNW = nCanvas.width; const physNH = nCanvas.height;
             const idN = nCtx.createImageData(physNW, physNH);
             const ncx = physNW / 2; const ncy = physNH / 2;
@@ -432,18 +571,23 @@
 
             for(let rad=0; rad <= maxNR; rad++) {
                 let r_n=0, g_n=0, b_n=0;
-                // Correctly scale rad down by dpr so rings don't become 4x tighter on Retina screens
-                let scaled_rad = rad / dpr;
+                // Convert device pixels to CSS pixels, then map the canvas edge to r = 2 mm.
+                const scaledRadCss = rad / dpr;
+                const radiusM = (scaledRadCss / (N_SIZE / 2)) * NEWTON_DISPLAY_RADIUS_M;
+                // Air-film thickness between a spherical lens surface and a flat plate:
+                // t(r) = r^2 / (2R). One reflected ray has a pi phase reversal.
+                const filmThicknessM = (radiusM * radiusM) / (2 * NEWTON_LENS_RADIUS_M);
 
                 for(let w of activeWavelengths) {
-                    // Newton's Rings formula: I = sin^2( k * r^2 / lambda )
-                    let phase = (0.005 * scaled_rad * scaled_rad * a_um) / w;
-                    let I = Math.pow(Math.sin(phase), 2);
-                    let rgb = getRGBArray(w);
-                    // No gamma correction here to emphasize non-exponential fade
-                    r_n += I * rgb[0] * weight; g_n += I * rgb[1] * weight; b_n += I * rgb[2] * weight;
+                    const lambdaM = w * 1e-9;
+                    const phase = (2 * Math.PI * filmThicknessM) / lambdaM;
+                    const intensity = Math.pow(Math.sin(phase), 2);
+                    const rgb = getRGBArray(w);
+                    r_n += intensity * rgb[0] * weight;
+                    g_n += intensity * rgb[1] * weight;
+                    b_n += intensity * rgb[2] * weight;
                 }
-                let idx = rad * 4;
+                const idx = rad * 4;
                 nRadCache[idx]   = Math.min(255, r_n);
                 nRadCache[idx+1] = Math.min(255, g_n);
                 nRadCache[idx+2] = Math.min(255, b_n);
@@ -470,7 +614,21 @@
         pCtx.putImageData(id2D, 0, 0);
     }
 
-    Object.values(inputs).forEach(input => input.addEventListener('input', draw));
+    inputs.wave.addEventListener('input', draw);
+    inputs.white.addEventListener('change', draw);
+    inputs.width.addEventListener('input', () => {
+        const value = parseFloat(inputs.width.value);
+        if (currentMode === 'circular') pupilDiameterMm = value;
+        else slitWidthUm = value;
+        draw();
+    });
+    inputs.sep.addEventListener('input', () => {
+        if (currentMode === 'double') configureApertureControl();
+        draw();
+    });
+
+    configureApertureControl();
+    updateSetupSchematic();
     draw();
 </script>
 </body>
