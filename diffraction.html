@@ -293,57 +293,16 @@
     const newtonImage = document.getElementById('newtons-image-box');
     const modeBtns = document.querySelectorAll('.mode-btn');
 
-    function getRGBArray(Wavelength) {
-        
-// Approximate visible-spectrum colour mapping.
-// Blue-dominant violet at 400 nm; smooth interpolation
-// between spectral colour reference points.
-// This represents hue, not calibrated spectral brightness.
-
-const SPECTRUM_RGB = [
-    [400, 105,   0, 255],  // Violet
-    [420,  55,   0, 255],  // Blue-violet
-    [440,   0,   0, 255],  // Blue
-    [460,   0,  80, 255],  // Blue
-    [480,   0, 180, 255],  // Cyan-blue
-    [490,   0, 255, 220],  // Cyan
-    [500,   0, 255, 120],  // Cyan-green
-    [510,   0, 255,   0],  // Green
-    [530, 100, 255,   0],  // Green-yellow
-    [550, 200, 255,   0],  // Yellow-green
-    [570, 255, 255,   0],  // Yellow
-    [590, 255, 190,   0],  // Orange-yellow
-    [610, 255, 120,   0],  // Orange
-    [630, 255,  40,   0],  // Orange-red
-    [650, 255,   0,   0],  // Red
-    [700, 255,   0,   0]   // Deep red
-];
-
-function getRGBArray(wavelength) {
-
-    const lambda = Math.max(400, Math.min(700, wavelength));
-
-    let i = 0;
-
-    while (
-        i < SPECTRUM_RGB.length - 2 &&
-        lambda > SPECTRUM_RGB[i + 1][0]
-    ) {
-        i++;
-    }
-
-    const lower = SPECTRUM_RGB[i];
-    const upper = SPECTRUM_RGB[i + 1];
-
-    const t = (lambda - lower[0]) / (upper[0] - lower[0]);
-
-    return [
-        Math.round(lower[1] + t * (upper[1] - lower[1])),
-        Math.round(lower[2] + t * (upper[2] - lower[2])),
-        Math.round(lower[3] + t * (upper[3] - lower[3]))
-    ];
-}
-
+   function getRGBArray(Wavelength) {
+        let R, G, B;
+        if(Wavelength >= 380 && Wavelength < 440) { R = -(Wavelength - 440) / (440 - 380); G = 0.0; B = 1.0; }
+        else if(Wavelength >= 440 && Wavelength < 490) { R = 0.0; G = (Wavelength - 440) / (490 - 440); B = 1.0; }
+        else if(Wavelength >= 490 && Wavelength < 510) { R = 0.0; G = 1.0; B = -(Wavelength - 510) / (510 - 490); }
+        else if(Wavelength >= 510 && Wavelength < 580) { R = (Wavelength - 510) / (580 - 510); G = 1.0; B = 0.0; }
+        else if(Wavelength >= 580 && Wavelength < 645) { R = 1.0; G = -(Wavelength - 645) / (645 - 580); B = 0.0; }
+        else if(Wavelength >= 645 && Wavelength <= 780) { R = 1.0; G = 0.0; B = 0.0; }
+        else { R = 0; G = 0; B = 0; }
+        return [R * 255, G * 255, B * 255];
     }
 
     // Bessel function of the first kind, order 1.
@@ -532,9 +491,9 @@ function getRGBArray(wavelength) {
                 r += I * rgb[0] * weight; g += I * rgb[1] * weight; b += I * rgb[2] * weight;
             }
             let idx = x * 4;
-            stripCache[idx]   = Math.min(255, Math.pow(r/255, gamma1D)*255);
-            stripCache[idx+1] = Math.min(255, Math.pow(g/255, gamma1D)*255);
-            stripCache[idx+2] = Math.min(255, Math.pow(b/255, gamma1D)*255);
+            stripCache[idx]   = Math.min(255, r);
+            stripCache[idx+1] = Math.min(255, g);
+            stripCache[idx+2] = Math.min(255, b);
             stripCache[idx+3] = 255;
         }
 
@@ -555,14 +514,18 @@ function getRGBArray(wavelength) {
                 let sinTheta = Math.sin(theta);
                 let r=0, g=0, b=0;
                 for(let w of activeWavelengths) {
-                    let I = getIntensity(sinTheta, w * 1e-9, a, d);
-                    let rgb = getRGBArray(w);
-                    r += I * rgb[0] * weight; g += I * rgb[1] * weight; b += I * rgb[2] * weight;
+                    const I = getIntensity(sinTheta, w * 1e-9, a, d);
+                    const displayI = Math.pow(Math.max(0, I), gamma2D);
+                    const rgb = getRGBArray(w);
+                
+                    r += displayI * rgb[0] * weight;
+                    g += displayI * rgb[1] * weight;
+                    b += displayI * rgb[2] * weight;
                 }
                 let idx = x * 4;
-                rowCache[idx]   = Math.min(255, Math.pow(r/255, gamma2D)*255);
-                rowCache[idx+1] = Math.min(255, Math.pow(g/255, gamma2D)*255);
-                rowCache[idx+2] = Math.min(255, Math.pow(b/255, gamma2D)*255);
+                rowCache[idx]   = Math.min(255, r);
+                rowCache[idx+1] = Math.min(255, g);
+                rowCache[idx+2] = Math.min(255, b);
                 rowCache[idx+3] = 255;
             }
             for(let y=0; y < physPH; y++) id2D.data.set(rowCache, y * physPW * 4);
@@ -576,14 +539,18 @@ function getRGBArray(wavelength) {
                 let sinTheta = Math.sin(theta);
                 let r=0, g=0, b=0;
                 for(let w of activeWavelengths) {
-                    let I = getIntensity(sinTheta, w * 1e-9, a, d);
-                    let rgb = getRGBArray(w);
-                    r += I * rgb[0] * weight; g += I * rgb[1] * weight; b += I * rgb[2] * weight;
+                    const I = getIntensity(sinTheta, w * 1e-9, a, d);
+                    const displayI = Math.pow(Math.max(0, I), gamma2D);
+                    const rgb = getRGBArray(w);
+                
+                    r += displayI * rgb[0] * weight;
+                    g += displayI * rgb[1] * weight;
+                    b += displayI * rgb[2] * weight;
                 }
                 let idx = rad * 4;
-                radCache[idx]   = Math.min(255, Math.pow(r/255, gamma2D)*255);
-                radCache[idx+1] = Math.min(255, Math.pow(g/255, gamma2D)*255);
-                radCache[idx+2] = Math.min(255, Math.pow(b/255, gamma2D)*255);
+                radCache[idx]   = Math.min(255, r);
+                radCache[idx+1] = Math.min(255, g);
+                radCache[idx+2] = Math.min(255, b);
                 radCache[idx+3] = 255;
             }
 
